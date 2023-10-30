@@ -6,8 +6,6 @@ index 000000000..4aa91dad2
 @@ -0,0 +1,69 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
-+ * Copyright (C) 2023 Leica Biosystems Pty Ltd
-+ *
 + * This program is free software; you can redistribute it and/or
 + * modify it under the terms of the GNU General Public License
 + * as published by the Free Software Foundation; either version 2
@@ -34,7 +32,7 @@ index 000000000..4aa91dad2
 +                status = "okay";
 +
 +                port {
-+                        basler_camera_ep_0: endpoint {
++                        camera_ep_0: endpoint {
 +                                data-lanes = <1 2 3 4>;
 +                                clock-lanes = <0>;
 +                                /* link-frequencies = /bits/ 64 <750000000>; */
@@ -56,7 +54,7 @@ index 000000000..4aa91dad2
 +
 +        port@0 {
 +                mipi1_sensor_ep: endpoint {
-+                        remote-endpoint = <&basler_camera_ep_0>;
++                        remote-endpoint = <&camera_ep_0>;
 +                        data-lanes = <4>;
 +                        csis-hs-settle = <11>;
 +                        csis-clk-settle = <0>;
