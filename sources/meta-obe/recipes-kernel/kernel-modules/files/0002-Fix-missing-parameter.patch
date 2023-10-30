@@ -1,0 +1,25 @@
+From 866ebdb179fca0acac4b083776be888f11d469f9 Mon Sep 17 00:00:00 2001
+From: Chris Storah <chris.storah@gmail.com>
+Date: Mon, 30 Oct 2023 22:39:39 +1100
+Subject: [PATCH] Fix-missing-parameter
+
+---
+ .../allocator/default/gc_hal_kernel_allocator_user_memory.c     | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/allocator/default/gc_hal_kernel_allocator_user_memory.c b/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/allocator/default/gc_hal_kernel_allocator_user_memory.c
+index e1a7adb..de9a8a5 100644
+--- a/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/allocator/default/gc_hal_kernel_allocator_user_memory.c
++++ b/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/allocator/default/gc_hal_kernel_allocator_user_memory.c
+@@ -229,7 +229,7 @@ import_page_map(gckOS           Os,
+ #else
+                             (flags & VM_WRITE) ? 1 : 0, 0,
+ #endif
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 4, 0)
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 5, 0)
+                             pages);
+ #else
+                             pages, NULL);
+-- 
+2.39.2
+

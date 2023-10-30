@@ -34,6 +34,18 @@ PV = "${LINUX_VERSION}"
 KCONFIG_MODE = "--alldefconfig"
 KERNEL_DEFCONFIG = "obe-defconfig"
 
+KERNEL_DEVICETREE:remove:use-nxp-bsp = " \
+    freescale/imx8mn-ddr4-evk-ak5558.dtb \
+    freescale/imx8mn-ddr4-evk-lk.dtb \
+    freescale/imx8mn-ddr4-evk-rm67191.dtb \
+    freescale/imx8mn-ddr4-evk-rm67191-cmd-ram.dtb \
+    freescale/imx8mn-ddr4-evk-rm67199.dtb \
+    freescale/imx8mn-ddr4-evk-rm67199-cmd-ram.dtb \
+    freescale/imx8mn-ddr4-evk-rpmsg.dtb \
+    freescale/imx8mn-ddr4-evk-usd-wifi.dtb \
+"
+
+KERNEL_DEVICETREE:append = " freescale/${KERNEL_DEVICETREE_BASENAME}.dtb "
 
 KCONF_BSP_AUDIT_LEVEL = "1"
 
@@ -41,4 +53,5 @@ KCONF_BSP_AUDIT_LEVEL = "1"
 KERNEL_EXTRA_FEATURES ?= "features/netfilter/netfilter.scc"
 KERNEL_FEATURES:append = " ${KERNEL_EXTRA_FEATURES}"
 KERNEL_EXTRA_ARGS += "LOADADDR=${UBOOT_ENTRYPOINT}"
+
 
