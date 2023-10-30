@@ -3,7 +3,7 @@ new file mode 100644
 index 000000000..4aa91dad2
 --- /dev/null
 +++ b/arch/arm64/boot/dts/freescale/imx8mn-ddr4-evk-ar1335.dts
-@@ -0,0 +1,69 @@
+@@ -0,0 +1,67 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * This program is free software; you can redistribute it and/or
@@ -23,7 +23,7 @@ index 000000000..4aa91dad2
 +        /delete-node/ov5640_mipi@3c;
 +
 +        ar1335_camera@36 {
-+                compatible = "ar1335,ar1335-camera";
++                compatible = "onsemi,ar1335";
 +                #address-cells = <1>;
 +                #size-cells = <0>;
 +                reg = <0x36>;

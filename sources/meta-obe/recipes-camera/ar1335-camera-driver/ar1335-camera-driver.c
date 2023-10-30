@@ -21,15 +21,8 @@ static const struct regmap_config ar1335_sensor_regmap_config = {
         .cache_type = REGCACHE_RBTREE,
 };
 
-//static const struct file_operations ar1335_fileops = {
-//        .owner = THIS_MODULE,
-////        .open = ar1335_open,
-//        .unlocked_ioctl = ar1335_ioctl,
-////        .release = ar1335_release,
-//};
-
 static struct of_device_id ar1335_of_match[] = {
-        { .compatible = "camera,ar1335", },
+        { .compatible = "onsemi,ar1335", },
         { },
 };
 
