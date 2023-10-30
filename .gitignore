@@ -1,0 +1,8 @@
+# config
+build/conf/conf-notes.txt
+build/conf/templateconf.cfg
+
+# sources
+sources/poky
+sources/meta-openembedded
+sources/meta-freescale
