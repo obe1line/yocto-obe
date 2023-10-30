@@ -23,7 +23,7 @@ SRC_URI:append = "file://0003-copied-top-dtsi-for-imx8mn-from-nxp-repo.patch "
 SRC_URI:append = "file://obe-defconfig "
 
 SRC_URI[machine.sha256sum] = "9626ec84a39ecb009bf11a271dd520941159c165d4e62f82e3a77b79d20ff27d"
-SRC_URI[meta.sha256sum] = "d0d9f2acecf1f781bf529108618db07a8909f72906af7a8785dcbea5c2484745"
+SRC_URI[meta.sha256sum] = "0cdb914bfd4ac61d0c33fdf64e7312a504579bbbac8d8948476785bac286f11e"
 
 # source directory is not in the usual git folder, but rather linux-<version>
 S = "${WORKDIR}/linux-${LINUX_VERSION}"

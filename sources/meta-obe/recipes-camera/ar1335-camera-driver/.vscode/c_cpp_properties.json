@@ -1,0 +1,22 @@
+{
+    "configurations": [
+
+        {
+            "name": "linux-kernel",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/mnt/data256/yocto-obe/build/tmp/work-shared/imx8mn-ddr4-evk-ar1335/kernel-source/**",
+                "/mnt/data256/yocto-obe/build/tmp/work-shared/imx8mn-ddr4-evk-ar1335/kernel-source/include",
+                "/mnt/data256/yocto-obe/build/tmp/work-shared/imx8mn-ddr4-evk-ar1335/kernel-source/arch/arm64/include"
+            ],
+            "defines": [
+                "__KERNEL__",
+                "MODULE"
+            ],
+            "compilerPath": "/usr/bin/aarch64-linux-gnu-gcc",
+            "cStandard": "c11",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "linux-gcc-arm64"        }
+    ],
+    "version": 4
+}

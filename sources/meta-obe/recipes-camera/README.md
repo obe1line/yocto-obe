@@ -1,14 +1,14 @@
 # Build Notes
 
 ## Fetch the Linux source
-git clone --depth=1 https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git --branch v6.5.8
+git clone --depth=1 https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git --branch v6.4.14
 cd linux
 
 ## Install cross-compile tools
-sudo apt install gcc-aarch64-linu-gnu
+sudo apt install gcc make gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
 
 ## Copy the initial configuration file
-cp ~/imx/sources/meta-obe/recipes-kernel/linux/files/obe-defconfig .config
+cp ~/sources/meta-obe/recipes-kernel/linux/files/obe-defconfig .config
 
 ## Set the environment variables for cross compilation
 export arch=arm64
