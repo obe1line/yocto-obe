@@ -20,7 +20,7 @@ SRC_URI:append = "https://git.yoctoproject.org/yocto-kernel-cache/snapshot/yocto
 SRC_URI:append = "file://0001-updated-imx8mn-dts-from-nxp-repo.patch "
 SRC_URI:append = "file://0002-imx8mn-ddr4-evk-Add-DTS-for-AR1335-camera.patch "
 SRC_URI:append = "file://0003-copied-top-dtsi-for-imx8mn-from-nxp-repo.patch "
-SRC_URI:append = "file://obe_defconfig "
+SRC_URI:append = "file://obe-defconfig "
 
 SRC_URI[machine.sha256sum] = "9626ec84a39ecb009bf11a271dd520941159c165d4e62f82e3a77b79d20ff27d"
 SRC_URI[meta.sha256sum] = "d0d9f2acecf1f781bf529108618db07a8909f72906af7a8785dcbea5c2484745"
@@ -31,7 +31,7 @@ S = "${WORKDIR}/linux-${LINUX_VERSION}"
 PV = "${LINUX_VERSION}"
 
 KCONFIG_MODE = "alldefconfig"
-KERNEL_DEFCONFIG = "obe_defconfig"
+KERNEL_DEFCONFIG = "obe-defconfig"
 
 
 KCONF_BSP_AUDIT_LEVEL = "1"

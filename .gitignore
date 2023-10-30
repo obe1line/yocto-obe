@@ -2,7 +2,18 @@
 build/conf/conf-notes.txt
 build/conf/templateconf.cfg
 
+# build
+build/bitbake.lock
+build/cache/
+build/downloads/
+build/sstate-cache/
+build/tmp/
+
+
 # sources
 sources/poky
 sources/meta-openembedded
 sources/meta-freescale
+
+# logs
+*.log
