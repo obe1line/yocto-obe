@@ -1,0 +1,75 @@
+diff --git a/arch/arm64/boot/dts/freescale/imx8mn-ddr4-evk-ar1335.dts b/arch/arm64/boot/dts/freescale/imx8mn-ddr4-evk-ar1335.dts
+new file mode 100644
+index 000000000..4aa91dad2
+--- /dev/null
++++ b/arch/arm64/boot/dts/freescale/imx8mn-ddr4-evk-ar1335.dts
+@@ -0,0 +1,69 @@
++// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
++/*
++ * Copyright (C) 2023 Leica Biosystems Pty Ltd
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */
++
++#include "imx8mn-ddr4-evk.dts"
++
++&i2c3 {
++        /delete-node/ov5640_mipi@3c;
++
++        ar1335_camera@36 {
++                compatible = "ar1335,ar1335-camera";
++                #address-cells = <1>;
++                #size-cells = <0>;
++                reg = <0x36>;
++                csi_id = <0x00>;
++                mipi_csi;
++                status = "okay";
++
++                port {
++                        basler_camera_ep_0: endpoint {
++                                data-lanes = <1 2 3 4>;
++                                clock-lanes = <0>;
++                                /* link-frequencies = /bits/ 64 <750000000>; */
++                                /* max-lane-frequency = /bits/ 64 <750000000>; */
++                                /* max-pixel-frequency = /bits/ 64 <500000000>; */
++                                /* max-data-rate = /bits/ 64 <0>; */
++                                remote-endpoint = <&mipi1_sensor_ep>;
++                        };
++                };
++        };
++};
++
++
++&mipi_csi_1 {
++        #address-cells = <1>;
++        #size-cells = <0>;
++        clock-frequency = <240000000>;
++        status = "okay";
++
++        port@0 {
++                mipi1_sensor_ep: endpoint {
++                        remote-endpoint = <&basler_camera_ep_0>;
++                        data-lanes = <4>;
++                        csis-hs-settle = <11>;
++                        csis-clk-settle = <0>;
++			csis-wclk;
++                };
++        };
++};
++
++
++&isi_0 {
++	status = "okay";
++};
++
++&cameradev {
++    status = "okay";
++};
