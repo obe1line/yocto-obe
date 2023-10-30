@@ -31,7 +31,7 @@ S = "${WORKDIR}/linux-${LINUX_VERSION}"
 
 PV = "${LINUX_VERSION}"
 
-KCONFIG_MODE = "--alldefconfig"
+KCONFIG_MODE = "--allnoconfig"
 KERNEL_DEFCONFIG = "obe-defconfig"
 
 #KERNEL_DEVICETREE:remove = " freescale/${KERNEL_DEVICETREE_BASENAME}-ak5558.dtb "
