@@ -13,7 +13,6 @@ SRCREV = "6bd4a7248992ec270ced9c09d9e90e0c3b048626"
 SRC_URI = "git://github.com/Freescale/kernel-module-imx-gpu-viv.git;protocol=https;branch=master"
 
 # patch the changes for 6.4.14 kernel
-FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 SRC_URI += " file://0001-Fix-missing-include-on-kernel-6.4.16.patch"
 SRC_URI += " file://0002-Fix-missing-parameter.patch"
 

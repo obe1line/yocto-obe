@@ -134,8 +134,10 @@ static int ar1335_regulator_get(struct ar1335_info *info,
 
     reg = regulator_get(&info->i2c_client->dev, vreg_name);
     if (unlikely(IS_ERR(reg))) {
-        dev_err(&info->i2c_client->dev, "%s %s ERR: %d\n", __func__, vreg_name, (int)reg);
-        err = PTR_ERR(reg);
+        // dev_err(&info->i2c_client->dev, "%s %s ERR: %d\n", __func__, vreg_name, (int)reg);
+        // err = PTR_ERR(reg);
+        dev_err(&info->i2c_client->dev, "%s %s\n", __func__, vreg_name);
+        err = 1;
         reg = NULL;
     } else
         dev_dbg(&info->i2c_client->dev, "%s: %s\n",
@@ -237,6 +239,7 @@ static void remove_driver(struct i2c_client *client) {
 
 static void shutdown(struct i2c_client *client) {
     // system is shutting down
+    dev_info(&client->dev, "shutdown - not implemented yet");
 }
 
 static void alert(struct i2c_client *client, enum i2c_alert_protocol protocol, unsigned int data) {

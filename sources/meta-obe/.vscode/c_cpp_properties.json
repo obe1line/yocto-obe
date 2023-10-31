@@ -5,9 +5,9 @@
             "name": "linux-kernel",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/mnt/data256/yocto-obe/build/tmp/work-shared/imx8mn-ddr4-evk-ar1335/kernel-source/**",
-                "/mnt/data256/yocto-obe/build/tmp/work-shared/imx8mn-ddr4-evk-ar1335/kernel-source/include",
-                "/mnt/data256/yocto-obe/build/tmp/work-shared/imx8mn-ddr4-evk-ar1335/kernel-source/arch/arm64/include"
+                "/mnt/data256/linux-6.4.16/**",
+                "/mnt/data256/linux-6.4.16/include",
+                "/mnt/data256/linux-6.4.16/arch/arm64/include"
             ],
             "defines": [
                 "__KERNEL__",
