@@ -31,19 +31,10 @@ S = "${WORKDIR}/linux-${LINUX_VERSION}"
 
 PV = "${LINUX_VERSION}"
 
-KCONFIG_MODE = "--allnoconfig"
+# TODO: when all config is working, use KCONFIG_MODE = "--allnoconfig"
+KCONFIG_MODE = "--alldefconfig"
 KERNEL_DEFCONFIG = "obe-defconfig"
 
-#KERNEL_DEVICETREE:remove = " freescale/${KERNEL_DEVICETREE_BASENAME}-ak5558.dtb "
-#KERNEL_DEVICETREE:remove = " freescale/${KERNEL_DEVICETREE_BASENAME}-lk.dtb "
-#KERNEL_DEVICETREE:remove = " freescale/${KERNEL_DEVICETREE_BASENAME}-rm67191.dtb "
-#KERNEL_DEVICETREE:remove = " freescale/${KERNEL_DEVICETREE_BASENAME}-rm67191-cmd-ram.dtb "
-#KERNEL_DEVICETREE:remove = " freescale/${KERNEL_DEVICETREE_BASENAME}-rm67199.dtb "
-#KERNEL_DEVICETREE:remove = " freescale/${KERNEL_DEVICETREE_BASENAME}-rm67199-cmd-ram.dtb "
-#KERNEL_DEVICETREE:remove = " freescale/${KERNEL_DEVICETREE_BASENAME}-rpmsg.dtb "
-#KERNEL_DEVICETREE:remove = " freescale/${KERNEL_DEVICETREE_BASENAME}-usd-wifi.dtb "
-
-#KERNEL_DEVICETREE:append = " freescale/${KERNEL_DEVICETREE_BASENAME}.dtb "
 KERNEL_DEVICETREE = " freescale/${KERNEL_DEVICETREE_BASENAME}.dtb "
 
 KCONF_BSP_AUDIT_LEVEL = "1"
