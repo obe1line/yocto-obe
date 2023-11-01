@@ -1,0 +1,26 @@
+From 376b6ffd17de7b8683b3f0b5f65f98c2d8607ae1 Mon Sep 17 00:00:00 2001
+From: Your Name <you@example.com>
+Date: Tue, 10 Oct 2023 04:14:17 +0000
+Subject: [PATCH] Fixes to build on kernel version 6.4.16
+
+---
+ .../platform/freescale/gc_hal_kernel_platform_imx.c      | 1 +
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/platform/freescale/gc_hal_kernel_platform_imx.c b/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/platform/freescale/gc_hal_kernel_platform_imx.c
+index d0abb38..21d58b5 100644
+--- a/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/platform/freescale/gc_hal_kernel_platform_imx.c
++++ b/kernel-module-imx-gpu-viv-src/hal/os/linux/kernel/platform/freescale/gc_hal_kernel_platform_imx.c
+@@ -92,7 +92,9 @@
+ #    include <linux/busfreq-imx6.h>
+ #    include <linux/reset.h>
+ #  else
++#    if LINUX_VERSION_CODE < KERNEL_VERSION(6,4,0)
+ #      include <linux/busfreq-imx.h>
++#    endif
+ #    include <linux/reset.h>
+ #  endif
+ #endif
+-- 
+2.34.1
+

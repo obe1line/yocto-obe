@@ -1,0 +1,22 @@
+{
+    "configurations": [
+
+        {
+            "name": "linux-kernel",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/mnt/data256/linux-6.4.16/**",
+                "/mnt/data256/linux-6.4.16/include",
+                "/mnt/data256/linux-6.4.16/arch/arm64/include"
+            ],
+            "defines": [
+                "__KERNEL__",
+                "MODULE"
+            ],
+            "compilerPath": "/usr/bin/aarch64-linux-gnu-gcc",
+            "cStandard": "c11",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "linux-gcc-arm64"        }
+    ],
+    "version": 4
+}
