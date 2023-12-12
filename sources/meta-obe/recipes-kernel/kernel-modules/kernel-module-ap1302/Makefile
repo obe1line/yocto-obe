@@ -1,9 +1,9 @@
 ifneq ($(KERNELRELEASE),)
 
-   obj-m += ar1335-camera-driver.o
+   obj-m += ap1302.o
 
 # uncomment to activate debug output
-# CFLAGS_ar1335-camera-driver.o = -DDEBUG
+# CFLAGS_ap1302.o = -DDEBUG
 
 else
 # normal makefile
