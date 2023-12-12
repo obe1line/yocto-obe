@@ -20,7 +20,7 @@ index 05ad0fe8e..f58cab99f 100644
 +		pvdd-supply = <&v1v8>;
 +		a2vdd-supply = <&v1v8>;
 +		v3p3-supply = <&v3v3>;
-+		v1p2-supply = <&v1v8>;  # 7535 requires 1V8 on this pin
++		v1p2-supply = <&v1v8>;  /* 7535 requires 1V8 on this pin */
 +
 +		v1v8: v1v8-regulator {
 +			regulator-min-microvolt = <1800000>;

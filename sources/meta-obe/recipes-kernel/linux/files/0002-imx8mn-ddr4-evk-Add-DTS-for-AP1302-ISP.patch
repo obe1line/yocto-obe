@@ -3,7 +3,7 @@ new file mode 100644
 index 000000000..4aa91dad2
 --- /dev/null
 +++ b/arch/arm64/boot/dts/freescale/imx8mn-ddr4-evk-ap1302.dts
-@@ -0,0 +1,71 @@
+@@ -0,0 +1,73 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * This program is free software; you can redistribute it and/or
@@ -24,26 +24,27 @@ index 000000000..4aa91dad2
 +
 +        ap1302_isp@3C {
 +                compatible = "onsemi,ap1302";
-+                #address-cells = <1>;
-+                #size-cells = <0>;
 +                reg = <0x3C>;
-+                csi_id = <0x00>;
-+                mipi_csi;
-+                status = "okay";
 +                pinctrl-names = "default";
-+                pinctrl-0 = <&pinctrl_camera>;
++                pinctrl-0 = <&pinctrl_csi_pwn>, <&pinctrl_csi_rst>;
++                clocks = <&clk IMX8MN_CLK_CLKO1>;
++                clock-names = "xclk";
++                assigned-clocks = <&clk IMX8MN_CLK_CLKO1>;
++                assigned-clock-parents = <&clk IMX8MN_CLK_24M>;
++                assigned-clock-rates = <24000000>;
++                csi_id = <0x00>;
 +                powerdown-gpios = <&gpio1 7 GPIO_ACTIVE_HIGH>;
 +                reset-gpios = <&gpio1 6 GPIO_ACTIVE_LOW>;
++                mclk = <24000000>;
++                mclk_source = <0>;
++                mipi_csi;
++                status = "okay";
 +
 +                port {
 +                        camera_ep_0: endpoint {
-+                                data-lanes = <1 2 3 4>;
-+                                clock-lanes = <0>;
-+                                /* link-frequencies = /bits/ 64 <750000000>; */
-+                                /* max-lane-frequency = /bits/ 64 <750000000>; */
-+                                /* max-pixel-frequency = /bits/ 64 <500000000>; */
-+                                /* max-data-rate = /bits/ 64 <0>; */
 +                                remote-endpoint = <&mipi1_sensor_ep>;
++                                data-lanes = <1 2>;
++                                clock-lanes = <0>;
 +                        };
 +                };
 +        };

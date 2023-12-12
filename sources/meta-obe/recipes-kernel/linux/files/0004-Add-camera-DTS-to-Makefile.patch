@@ -8,17 +8,28 @@ Subject: [PATCH] Add-camera-DTS-to-Makefile
  1 file changed, 1 insertion(+)
 
 diff --git a/arch/arm64/boot/dts/freescale/Makefile b/arch/arm64/boot/dts/freescale/Makefile
-index ef7d17aef..0d305c92d 100644
+index de6525d60..d23852120 100644
 --- a/arch/arm64/boot/dts/freescale/Makefile
 +++ b/arch/arm64/boot/dts/freescale/Makefile
-@@ -85,6 +85,7 @@ dtb-$(CONFIG_ARCH_MXC) += imx8mn-bsh-smm-s2pro.dtb
+@@ -79,16 +79,15 @@ dtb-$(CONFIG_ARCH_MXC) += imx8mm-verdin-nonwifi-yavia.dtb
+ dtb-$(CONFIG_ARCH_MXC) += imx8mm-verdin-wifi-dahlia.dtb
+ dtb-$(CONFIG_ARCH_MXC) += imx8mm-verdin-wifi-dev.dtb
+ dtb-$(CONFIG_ARCH_MXC) += imx8mm-verdin-wifi-yavia.dtb
+-dtb-$(CONFIG_ARCH_MXC) += imx8mn-beacon-kit.dtb
++#dtb-$(CONFIG_ARCH_MXC) += imx8mn-beacon-kit.dtb
+ dtb-$(CONFIG_ARCH_MXC) += imx8mn-bsh-smm-s2.dtb
+ dtb-$(CONFIG_ARCH_MXC) += imx8mn-bsh-smm-s2pro.dtb
  dtb-$(CONFIG_ARCH_MXC) += imx8mn-evk.dtb
  dtb-$(CONFIG_ARCH_MXC) += imx8mn-ddr3l-evk.dtb
  dtb-$(CONFIG_ARCH_MXC) += imx8mn-ddr4-evk.dtb
-+dtb-$(CONFIG_ARCH_MXC) += imx8mn-ddr4-evk-ar1335.dtb
++dtb-$(CONFIG_ARCH_MXC) += imx8mn-ddr4-evk-ap1302.dtb
  dtb-$(CONFIG_ARCH_MXC) += imx8mn-tqma8mqnl-mba8mx.dtb
  dtb-$(CONFIG_ARCH_MXC) += imx8mn-var-som-symphony.dtb
- dtb-$(CONFIG_ARCH_MXC) += imx8mn-venice-gw7902.dtb
+-dtb-$(CONFIG_ARCH_MXC) += imx8mn-venice-gw7902.dtb
++#dtb-$(CONFIG_ARCH_MXC) += imx8mn-venice-gw7902.dtb
+ dtb-$(CONFIG_ARCH_MXC) += imx8mp-beacon-kit.dtb
+ dtb-$(CONFIG_ARCH_MXC) += imx8mp-data-modul-edm-sbc.dtb
+ dtb-$(CONFIG_ARCH_MXC) += imx8mp-debix-model-a.dtb
 -- 
 2.34.1
 

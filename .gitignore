@@ -17,3 +17,6 @@ sources/meta-freescale
 
 # logs
 *.log
+
+# IDEs
+.idea
