@@ -1,17 +1,17 @@
-From e8da4532d88728b68f72fe6983c30f19cdaa0500 Mon Sep 17 00:00:00 2001
-From: Your Name <you@example.com>
-Date: Thu, 26 Oct 2023 06:50:04 +0000
-Subject: [PATCH] Add-camera-DTS-to-Makefile
+From a205622c1288b3dd494c9637c3381812178c7c40 Mon Sep 17 00:00:00 2001
+From: Chris Storah <chris.storah@gmail.com>
+Date: Tue, 12 Dec 2023 21:24:27 +1100
+Subject: [PATCH] added dts for ap1302 and commented out failing boards
 
 ---
- arch/arm64/boot/dts/freescale/Makefile | 1 +
- 1 file changed, 1 insertion(+)
+ arch/arm64/boot/dts/freescale/Makefile | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/arch/arm64/boot/dts/freescale/Makefile b/arch/arm64/boot/dts/freescale/Makefile
-index de6525d60..d23852120 100644
+index ef7d17aef..4aaf15976 100644
 --- a/arch/arm64/boot/dts/freescale/Makefile
 +++ b/arch/arm64/boot/dts/freescale/Makefile
-@@ -79,16 +79,15 @@ dtb-$(CONFIG_ARCH_MXC) += imx8mm-verdin-nonwifi-yavia.dtb
+@@ -79,15 +79,16 @@ dtb-$(CONFIG_ARCH_MXC) += imx8mm-verdin-nonwifi-yavia.dtb
  dtb-$(CONFIG_ARCH_MXC) += imx8mm-verdin-wifi-dahlia.dtb
  dtb-$(CONFIG_ARCH_MXC) += imx8mm-verdin-wifi-dev.dtb
  dtb-$(CONFIG_ARCH_MXC) += imx8mm-verdin-wifi-yavia.dtb
@@ -22,7 +22,7 @@ index de6525d60..d23852120 100644
  dtb-$(CONFIG_ARCH_MXC) += imx8mn-evk.dtb
  dtb-$(CONFIG_ARCH_MXC) += imx8mn-ddr3l-evk.dtb
  dtb-$(CONFIG_ARCH_MXC) += imx8mn-ddr4-evk.dtb
-+dtb-$(CONFIG_ARCH_MXC) += imx8mn-ddr4-evk-ap1302.dtb
++dtb-$(CONFIG_ARCH_MXC) += imx8mn-ddr4-evk-ap1320.dtb
  dtb-$(CONFIG_ARCH_MXC) += imx8mn-tqma8mqnl-mba8mx.dtb
  dtb-$(CONFIG_ARCH_MXC) += imx8mn-var-som-symphony.dtb
 -dtb-$(CONFIG_ARCH_MXC) += imx8mn-venice-gw7902.dtb
@@ -30,6 +30,7 @@ index de6525d60..d23852120 100644
  dtb-$(CONFIG_ARCH_MXC) += imx8mp-beacon-kit.dtb
  dtb-$(CONFIG_ARCH_MXC) += imx8mp-data-modul-edm-sbc.dtb
  dtb-$(CONFIG_ARCH_MXC) += imx8mp-debix-model-a.dtb
--- 
-2.34.1
+--
+2.39.2
+
 
