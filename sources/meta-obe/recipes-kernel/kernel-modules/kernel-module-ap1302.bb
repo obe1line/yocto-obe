@@ -1,4 +1,4 @@
-SUMMARY = "AR1335 OnSemi Camera Driver"
+SUMMARY = "AP1320 OnSemi ISP Driver"
 LICENSE = "MIT"
 
 LIC_FILES_CHKSUM = "file://COPYING;md5=b958dc5809a692e2a1bf8bbbfd71a46f"
