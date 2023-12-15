@@ -8,6 +8,7 @@ build/cache/
 build/downloads/
 build/sstate-cache/
 build/tmp/
+build/workspace
 
 
 # sources

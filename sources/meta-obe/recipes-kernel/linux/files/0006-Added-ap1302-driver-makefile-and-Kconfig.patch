@@ -6,8 +6,8 @@ Subject: [PATCH] Added ap1302 driver, makefile and Kconfig
 ---
  drivers/media/i2c/Kconfig  |  11 +
  drivers/media/i2c/Makefile |   1 +
- drivers/media/i2c/ap1302.c | 726 +++++++++++++++++++++++++++++++++++++
- 3 files changed, 738 insertions(+)
+ drivers/media/i2c/ap1302.c | 725 +++++++++++++++++++++++++++++++++++++
+ 3 files changed, 737 insertions(+)
  create mode 100644 drivers/media/i2c/ap1302.c
 
 diff --git a/drivers/media/i2c/Kconfig b/drivers/media/i2c/Kconfig
@@ -46,7 +46,7 @@ new file mode 100644
 index 000000000..ca4d05280
 --- /dev/null
 +++ b/drivers/media/i2c/ap1302.c
-@@ -0,0 +1,726 @@
+@@ -0,0 +1,725 @@
 +/*
 + * Copyright (c) 2013 Intel Corporation. All Rights Reserved.
 + * Copyright 2022 NXP
@@ -607,8 +607,7 @@ index 000000000..ca4d05280
 + * @param adapter            struct i2c_adapter *
 + * @return  Error code indicating success or failure
 + */
-+static int ap1302_probe(struct i2c_client *client,
-+			const struct i2c_device_id *id)
++static int ap1302_probe(struct i2c_client *client)
 +{
 +	struct device *dev = &client->dev;
 +	struct ap1302_device *ap1302_dev;

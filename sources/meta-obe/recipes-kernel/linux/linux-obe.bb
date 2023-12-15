@@ -7,6 +7,8 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
 inherit kernel-yocto kernel fsl-kernel-localversion fsl-vivante-kernel-driver-handler
 
 LOCAL_VERSION ?= ""
+# do not put the SCM version in the filename as it uses a snapshot zip which fails the build when fetching the hashes
+SCMVERSION = "n"
 
 # TODO: CVE Exclusions
 # CVE exclusions
