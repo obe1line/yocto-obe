@@ -46,7 +46,7 @@ new file mode 100644
 index 000000000..ca4d05280
 --- /dev/null
 +++ b/drivers/media/i2c/ap1302.c
-@@ -0,0 +1,725 @@
+@@ -0,0 +1,724 @@
 +/*
 + * Copyright (c) 2013 Intel Corporation. All Rights Reserved.
 + * Copyright 2022 NXP
