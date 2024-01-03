@@ -46,7 +46,7 @@ new file mode 100644
 index 000000000..ca4d05280
 --- /dev/null
 +++ b/drivers/media/i2c/ap1302.c
-@@ -0,0 +1,3820 @@
+@@ -0,0 +1,3821 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Driver for the AP1302 external camera ISP from ON Semiconductor
