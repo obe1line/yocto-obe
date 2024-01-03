@@ -3,7 +3,7 @@ new file mode 100644
 index 000000000..4aa91dad2
 --- /dev/null
 +++ b/arch/arm64/boot/dts/freescale/imx8mn-ddr4-evk-ap1302.dts
-@@ -0,0 +1,89 @@
+@@ -0,0 +1,90 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * This program is free software; you can redistribute it and/or

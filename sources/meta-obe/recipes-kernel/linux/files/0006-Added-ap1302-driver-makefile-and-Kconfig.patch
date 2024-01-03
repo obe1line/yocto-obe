@@ -26,7 +26,7 @@ index dbcc2222d..9e4be30f0 100644
 +	select VIDEO_V4L2_SUBDEV_API
 +	select V4L2_FWNODE
 +	help
-+	  This is a Video4Linux2 sensor driver for the ONSEMI AP1302 image 
++	  This is a Video4Linux2 sensor driver for the ONSEMI AP1302 image
 +	  co-processor with a MIPI CSI-2 interface
 +
  endmenu
@@ -1249,7 +1249,7 @@ index 000000000..ca4d05280
 +	if (ap1302->reset_gpio) {
 +		gpiod_set_value(ap1302->reset_gpio, 0);
 +	}
-+	
++
 +	/*
 +	 * 6. Wait for the AP1302 to initialize. The datasheet doesn't specify
 +	 * how long this takes.
@@ -1265,7 +1265,7 @@ index 000000000..ca4d05280
 +	if (ap1302->reset_gpio) {
 +		gpiod_set_value(ap1302->reset_gpio, 1);
 +	}
-+	
++
 +	/* Allow Reset to occur */
 +	usleep_range(200, 1000);
 +
@@ -3763,7 +3763,7 @@ index 000000000..ca4d05280
 +
 +	/* dev_info(ap1302->dev, "AP1302 Driver: %s\n",AP1302_DRV_TAG); */
 +	dev_info(ap1302->dev, "AP1302 Driver\n");
-+	
++
 +	mutex_init(&ap1302->lock);
 +
 +	ap1302->regmap16 = devm_regmap_init_i2c(client, &ap1302_reg16_config);
