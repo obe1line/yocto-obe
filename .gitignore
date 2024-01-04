@@ -15,6 +15,7 @@ build/workspace
 sources/poky
 sources/meta-openembedded
 sources/meta-freescale
+sources/meta-freescale-distro
 
 # logs
 *.log
