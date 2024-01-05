@@ -1,0 +1,96 @@
+diff --git a/arch/arm64/boot/dts/freescale/imx8mn-ddr4-evk-ap1302.dts b/arch/arm64/boot/dts/freescale/imx8mn-ddr4-evk-ap1302.dts
+new file mode 100644
+index 000000000..4aa91dad2
+--- /dev/null
++++ b/arch/arm64/boot/dts/freescale/imx8mn-ddr4-evk-ap1302.dts
+@@ -0,0 +1,90 @@
++// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
++/*
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */
++
++#include "imx8mn-ddr4-evk.dts"
++
++&i2c3 {
++        /delete-node/ov5640_mipi@3c;
++
++        ap1302_camera@3c {
++                compatible = "onnn,ap1302";
++                reg = <0x3c>;
++                /* pinctrl-names = "default"; */
++                /* pinctrl-0 = <&pinctrl_csi_pwn>, <&pinctrl_csi_rst>; */
++                clocks = <&clk IMX8MN_CLK_CLKO1>;
++                clock-names = "xclk";
++                assigned-clocks = <&clk IMX8MN_CLK_CLKO1>;
++                assigned-clock-parents = <&clk IMX8MN_CLK_24M>;
++                assigned-clock-rates = <24000000>;
++                csi_id = <0x00>;
++                /* powerdown-gpios = <&gpio1 7 GPIO_ACTIVE_HIGH>; */
++                /* reset-gpios = <&gpio1 6 GPIO_ACTIVE_LOW>; */
++                mclk = <24000000>;
++                mclk_source = <0>;
++                mipi_csi;
++                status = "okay";
++
++                port {
++                        camera_ep_0: endpoint {
++                                remote-endpoint = <&mipi1_sensor_ep>;
++                                link-frequencies = /bits/ 64 <900000000>;
++                                clock-lanes = <0>;
++                                data-lanes = <1 2 3 4>;
++                        };
++                };
++
++                /* start with no sensors - only test pattern generator available (via ap1302_tpg_fw.bin)
++                sensors {
++                    #address-cells = <1>;
++                    #size-cells = <0>;
++
++                    onnn,model = "onnn,ar0144";
++
++                    sensor@0 {
++                        reg = <0>;
++
++                        vdd-supply = <&mt6358_vcamd_reg>;
++                        vaa-supply = <&mt6358_vcama1_reg>;
++                        vddio-supply = <&reg_1p8v_ext>;
++                    };
++                };
++                */
++        };
++};
++
++
++&mipi_csi_1 {
++        #address-cells = <1>;
++        #size-cells = <0>;
++        clock-frequency = <240000000>;
++        status = "okay";
++
++        port@0 {
++                mipi1_sensor_ep: endpoint {
++                        remote-endpoint = <&camera_ep_0>;
++                        data-lanes = <4>;
++                        csis-hs-settle = <11>;
++                        csis-clk-settle = <0>;
++                        csis-wclk;
++                };
++        };
++};
++
++
++&isi_0 {
++	status = "okay";
++};
++
++&cameradev {
++    status = "okay";
++};

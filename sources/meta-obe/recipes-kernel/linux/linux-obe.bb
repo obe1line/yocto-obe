@@ -16,7 +16,7 @@ SCMVERSION = "n"
 
 LINUX_VERSION ?= "6.4.16"
 
-FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/linux-obe/files:"
 SRC_URI = ""
 SRC_URI:append = "http://cdn.kernel.org/pub/linux/kernel/v6.x/linux-${LINUX_VERSION}.tar.xz;name=machine "
 SRC_URI:append = "https://git.yoctoproject.org/yocto-kernel-cache/snapshot/yocto-kernel-cache-yocto-6.4.tar.gz;type=kmeta;name=meta;branch=yocto-6.4;destsuffix=${KMETA} "
