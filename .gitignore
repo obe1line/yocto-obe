@@ -16,6 +16,9 @@ sources/poky
 sources/meta-openembedded
 sources/meta-freescale
 sources/meta-freescale-distro
+sources/meta-arm
+sources/meta-imx
+sources/meta-virtualization
 
 # logs
 *.log

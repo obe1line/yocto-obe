@@ -1,10 +1,11 @@
 # Cross compile the kernel source (outside of Yocto) for development
 export ARCH=arm64
 export CROSS_COMPILE=aarch64-linux-gnu-
-FILES_PATH=$(cd `dirname $0` && pwd -P)/files
-cp $FILES_PATH/obe-defconfig ~/linux-6.4.16/.config
-pushd ~/linux-6.4.16
-# to add new default config settings for a later kernel, run the following command and see .config
+LINUX_VERSION="6.1.55"
+FILES_PATH=$(cd `dirname $0` && pwd -P)/linux-obe/files
+pushd ~/linux-$LINUX_VERSION
+# to add new default config settings for a later kernel, run the following commands and see .config
+# cp $FILES_PATH/obe-defconfig ~/linux-$LINUX_VERSION/.config
 # make olddefconfig
 #
 # apply the patches
@@ -16,10 +17,10 @@ pushd ~/linux-6.4.16
 # git apply $FILES_PATH/0006-Added-ap1302-driver-makefile-and-Kconfig.patch
 #
 # build
-make
-make modules
+# make -j`nproc`
+# make modules
 #
 # install modules
-export INSTALL_MOD_PATH=~/linux-6.4.16/lib-modules-output
-make modules_install
+#export INSTALL_MOD_PATH=~/linux-$LINUX_VERSION/lib-modules-output
+#make modules_install
 popd
