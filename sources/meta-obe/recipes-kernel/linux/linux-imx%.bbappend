@@ -17,6 +17,7 @@ unset KBUILD_DEFCONFIG
 DELTA_KERNEL_DEFCONFIG = "obe6157-defconfig"
 
 KERNEL_DEVICETREE += " freescale/${KERNEL_DEVICETREE_BASENAME}-ap1302.dtb "
+KERNEL_DEVICETREE += " freescale/${KERNEL_DEVICETREE_BASENAME}-ar0144.dtb "
 
 do_deploy:append:mx8m-generic-bsp() {
     # not sure why the dtb does not get copied to the u-boot folder, for now force a copy
