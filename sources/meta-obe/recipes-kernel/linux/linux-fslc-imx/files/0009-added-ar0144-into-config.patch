@@ -1,0 +1,32 @@
+From 86b49330115b558abd06f27c288e94301fe820bc Mon Sep 17 00:00:00 2001
+From: Chris Storah <chris.storah@gmail.com>
+Date: Wed, 24 Jan 2024 19:27:42 +1100
+Subject: [PATCH] added ar0144 into config
+
+---
+ drivers/media/i2c/Kconfig | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/drivers/media/i2c/Kconfig b/drivers/media/i2c/Kconfig
+index e6a0e168564f..319f55f4d223 100644
+--- a/drivers/media/i2c/Kconfig
++++ b/drivers/media/i2c/Kconfig
+@@ -708,6 +708,15 @@ config VIDEO_AP1302
+ 	  This is a Video4Linux2 sensor driver for the ONSEMI AP1302 camera
+ 	  sensor with a MIPI CSI-2 interface
+ 
++config VIDEO_AR0144
++	tristate "ON Semiconductor AR0144 sensor support"
++	depends on I2C && VIDEO_V4L2 && VIDEO_V4L2_SUBDEV_API
++	select VIDEO_V4L2_SUBDEV_API
++	select V4L2_FWNODE
++	---help---
++	  This is a V4L2 sensor-level driver for the ON Semiconductor AR0144
++	  CMOS image sensor.
++
+ config VIDEO_MT9M114
+ 	tristate "mt9m114 support"
+ 	depends on I2C && VIDEO_DEV
+-- 
+2.39.2
+
