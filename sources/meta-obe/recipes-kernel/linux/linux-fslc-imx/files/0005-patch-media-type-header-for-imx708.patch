@@ -1,0 +1,23 @@
+From 4ed163c3827a58c50c8329ca656c27cd70bc2b1c Mon Sep 17 00:00:00 2001
+From: Chris Storah <chris.storah@gmail.com>
+Date: Wed, 24 Jan 2024 16:21:33 +1100
+Subject: [PATCH] patch media type header for imx708
+
+---
+ include/uapi/linux/media-bus-format.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/include/uapi/linux/media-bus-format.h b/include/uapi/linux/media-bus-format.h
+index dfadd97d9396..3de28a3dfa26 100644
+--- a/include/uapi/linux/media-bus-format.h
++++ b/include/uapi/linux/media-bus-format.h
+@@ -174,4 +174,6 @@
+  */
+ #define MEDIA_BUS_FMT_METADATA_FIXED		0x7001
+ 
++#define MEDIA_BUS_FMT_SENSOR_DATA		0x7002
++
+ #endif /* __LINUX_MEDIA_BUS_FORMAT_H */
+-- 
+2.39.2
+
