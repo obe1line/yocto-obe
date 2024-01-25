@@ -4,8 +4,8 @@ Date: Thu, 25 Jan 2024 18:22:41 +1100
 Subject: [PATCH] added ar0144 driver
 
 ---
- drivers/media/i2c/ar0144.c | 802 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 802 insertions(+)
+ drivers/media/i2c/ar0144.c | 812 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 812 insertions(+)
  create mode 100644 drivers/media/i2c/ar0144.c
 
 diff --git a/drivers/media/i2c/ar0144.c b/drivers/media/i2c/ar0144.c
@@ -13,7 +13,7 @@ new file mode 100644
 index 000000000..6de45006c
 --- /dev/null
 +++ b/drivers/media/i2c/ar0144.c
-@@ -0,0 +1,802 @@
+@@ -0,0 +1,812 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Driver for the AR0144 Image Sensor Processor
@@ -704,6 +704,15 @@ index 000000000..6de45006c
 +	.pad = &ar0144_subdev_pad_ops,
 +};
 +
++static int ar0144_link_setup(struct media_entity *entity, struct media_pad const *local, struct media_pad const *remote, u32 flags)
++{
++    return 0;
++}
++
++static const struct media_entity_operations ar0144_media_ops = {
++    .link_setup = ar0144_link_setup,
++};
++
 +static int ar0144_probe(struct i2c_client *client,
 +			const struct i2c_device_id *id)
 +{
@@ -753,6 +762,7 @@ index 000000000..6de45006c
 +	v4l2_i2c_subdev_init(&ar0144->sd, client, &ar0144_subdev_ops);
 +	ar0144->sd.flags |= V4L2_SUBDEV_FL_HAS_DEVNODE;
 +	ar0144->sd.entity.function = MEDIA_ENT_F_CAM_SENSOR;
++	ar0144->sd->entity.ops = &ar0144_media_ops;
 +	ar0144->pad.flags = MEDIA_PAD_FL_SOURCE;
 +	ar0144->sd.dev = &client->dev;
 +
