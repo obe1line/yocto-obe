@@ -1,32 +1,19 @@
-From 23155ec4a5156656c053cd9772f5f7f715a85244 Mon Sep 17 00:00:00 2001
+From be61207be838522c74df1799d8421ba4e95531fe Mon Sep 17 00:00:00 2001
 From: Chris Storah <chris.storah@gmail.com>
-Date: Wed, 24 Jan 2024 18:10:20 +1100
+Date: Thu, 25 Jan 2024 18:22:41 +1100
 Subject: [PATCH] added ar0144 driver
 
 ---
- drivers/media/i2c/Makefile |   1 +
- drivers/media/i2c/ar0144.c | 800 +++++++++++++++++++++++++++++++++++++
- 2 files changed, 801 insertions(+)
+ drivers/media/i2c/ar0144.c | 802 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 802 insertions(+)
  create mode 100644 drivers/media/i2c/ar0144.c
 
-diff --git a/drivers/media/i2c/Makefile b/drivers/media/i2c/Makefile
-index 87687fada4c1..1b556b5d3633 100644
---- a/drivers/media/i2c/Makefile
-+++ b/drivers/media/i2c/Makefile
-@@ -20,6 +20,7 @@ obj-$(CONFIG_VIDEO_AK7375) += ak7375.o
- obj-$(CONFIG_VIDEO_AK881X) += ak881x.o
- obj-$(CONFIG_VIDEO_APTINA_PLL) += aptina-pll.o
- obj-$(CONFIG_VIDEO_AR0521) += ar0521.o
-+obj-$(CONFIG_VIDEO_AR0144) += ar0144.o
- obj-$(CONFIG_VIDEO_BT819) += bt819.o
- obj-$(CONFIG_VIDEO_BT856) += bt856.o
- obj-$(CONFIG_VIDEO_BT866) += bt866.o
 diff --git a/drivers/media/i2c/ar0144.c b/drivers/media/i2c/ar0144.c
 new file mode 100644
-index 000000000000..936d47ea377a
+index 000000000..6de45006c
 --- /dev/null
 +++ b/drivers/media/i2c/ar0144.c
-@@ -0,0 +1,800 @@
+@@ -0,0 +1,802 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Driver for the AR0144 Image Sensor Processor
@@ -510,7 +497,7 @@ index 000000000000..936d47ea377a
 +}
 +
 +static int ar0144_enum_mbus_code(struct v4l2_subdev *sd,
-+				 struct v4l2_subdev_pad_config *cfg,
++				 struct v4l2_subdev_state *sd_state,
 +				 struct v4l2_subdev_mbus_code_enum *code)
 +{
 +	if (code->index > 0)
@@ -522,7 +509,7 @@ index 000000000000..936d47ea377a
 +}
 +
 +static int ar0144_enum_frame_size(struct v4l2_subdev *subdev,
-+				  struct v4l2_subdev_pad_config *cfg,
++				  struct v4l2_subdev_state *sd_state,
 +				  struct v4l2_subdev_frame_size_enum *fse)
 +{
 +	if (fse->code != MEDIA_BUS_FMT_SRGGB12_1X12)
@@ -541,7 +528,7 @@ index 000000000000..936d47ea377a
 +
 +static struct v4l2_mbus_framefmt *
 +__ar0144_get_pad_format(struct ar0144 *ar0144,
-+			struct v4l2_subdev_pad_config *cfg,
++			struct v4l2_subdev_state *sd_state,
 +			unsigned int pad,
 +			enum v4l2_subdev_format_whence which)
 +{
@@ -555,20 +542,20 @@ index 000000000000..936d47ea377a
 +}
 +
 +static int ar0144_get_format(struct v4l2_subdev *sd,
-+			     struct v4l2_subdev_pad_config *cfg,
++			     struct v4l2_subdev_state *sd_state,
 +			     struct v4l2_subdev_format *format)
 +{
 +	struct ar0144 *ar0144 = to_ar0144(sd);
 +
 +	mutex_lock(&ar0144->lock);
-+	format->format = *__ar0144_get_pad_format(ar0144, cfg, format->pad,
++	format->format = *__ar0144_get_pad_format(ar0144, sd_state, format->pad,
 +						  format->which);
 +	mutex_unlock(&ar0144->lock);
 +	return 0;
 +}
 +
 +static struct v4l2_rect *
-+__ar0144_get_pad_crop(struct ar0144 *ar0144, struct v4l2_subdev_pad_config *cfg,
++__ar0144_get_pad_crop(struct ar0144 *ar0144, struct v4l2_subdev_state *sd_state,
 +		      unsigned int pad, enum v4l2_subdev_format_whence which)
 +{
 +	switch (which) {
@@ -581,7 +568,7 @@ index 000000000000..936d47ea377a
 +}
 +
 +static int ar0144_set_format(struct v4l2_subdev *sd,
-+			     struct v4l2_subdev_pad_config *cfg,
++			     struct v4l2_subdev_state *sd_state,
 +			     struct v4l2_subdev_format *format)
 +{
 +	struct ar0144 *ar0144 = to_ar0144(sd);
@@ -589,7 +576,7 @@ index 000000000000..936d47ea377a
 +
 +	mutex_lock(&ar0144->lock);
 +
-+	__format = __ar0144_get_pad_format(ar0144, cfg, format->pad,
++	__format = __ar0144_get_pad_format(ar0144, sd_state, format->pad,
 +			format->which);
 +	__format->width = 1280;
 +	__format->height = 800;
@@ -604,19 +591,19 @@ index 000000000000..936d47ea377a
 +}
 +
 +static int ar0144_entity_init_cfg(struct v4l2_subdev *subdev,
-+				  struct v4l2_subdev_pad_config *cfg)
++				  struct v4l2_subdev_state *sd_state)
 +{
 +	struct v4l2_subdev_format fmt = { 0 };
 +
-+	fmt.which = cfg ? V4L2_SUBDEV_FORMAT_TRY : V4L2_SUBDEV_FORMAT_ACTIVE;
++	fmt.which = sd_state ? V4L2_SUBDEV_FORMAT_TRY : V4L2_SUBDEV_FORMAT_ACTIVE;
 +
-+	ar0144_set_format(subdev, cfg, &fmt);
++	ar0144_set_format(subdev, sd_state, &fmt);
 +
 +	return 0;
 +}
 +
 +static int ar0144_get_selection(struct v4l2_subdev *sd,
-+			   struct v4l2_subdev_pad_config *cfg,
++			   struct v4l2_subdev_state *sd_state,
 +			   struct v4l2_subdev_selection *sel)
 +{
 +	struct ar0144 *ar0144 = to_ar0144(sd);
@@ -624,7 +611,7 @@ index 000000000000..936d47ea377a
 +	if (sel->target != V4L2_SEL_TGT_CROP)
 +		return -EINVAL;
 +
-+	sel->r = *__ar0144_get_pad_crop(ar0144, cfg, sel->pad,
++	sel->r = *__ar0144_get_pad_crop(ar0144, sd_state, sel->pad,
 +					sel->which);
 +	return 0;
 +}
@@ -748,16 +735,19 @@ index 000000000000..936d47ea377a
 +
 +	of_node_put(endpoint);
 +
++	/* remove?
 +	if (ar0144->ep.bus_type != V4L2_MBUS_CSI2) {
 +		dev_err(dev, "invalid bus type, must be parallel\n");
 +		return -EINVAL;
 +	}
++	*/
 +
 +	ar0144->rst_gpio = devm_gpiod_get(dev, "reset", GPIOD_OUT_HIGH);
 +	if (IS_ERR(ar0144->rst_gpio)) {
 +		if (PTR_ERR(ar0144->rst_gpio) != -EPROBE_DEFER)
 +			dev_err(dev, "cannot get reset gpio\n");
-+		return PTR_ERR(ar0144->rst_gpio);
++		// hack
++		//return PTR_ERR(ar0144->rst_gpio);
 +	}
 +
 +	v4l2_i2c_subdev_init(&ar0144->sd, client, &ar0144_subdev_ops);
@@ -796,9 +786,8 @@ index 000000000000..936d47ea377a
 +	return ret;
 +}
 +
-+static int ar0144_remove(struct i2c_client *client)
++static void ar0144_remove(struct i2c_client *client)
 +{
-+	return 0;
 +}
 +
 +static const struct i2c_device_id ar0144_id[] = {

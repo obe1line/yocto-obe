@@ -1751,7 +1751,7 @@ index f2d574d119b0..ecb41b1dc5de 100644
 +	if (ap1302->reset_gpio) {
 +		gpiod_set_value(ap1302->reset_gpio, 0);
 +	}
-+	
++
 +	/*
 +	 * 6. Wait for the AP1302 to initialize. The datasheet doesn't specify
 +	 * how long this takes.
@@ -1767,7 +1767,7 @@ index f2d574d119b0..ecb41b1dc5de 100644
 +	if (ap1302->reset_gpio) {
 +		gpiod_set_value(ap1302->reset_gpio, 1);
 +	}
-+	
++
 +	/* Allow Reset to occur */
 +	usleep_range(200, 1000);
 +
@@ -4265,7 +4265,7 @@ index f2d574d119b0..ecb41b1dc5de 100644
 +
 +	/* dev_info(ap1302->dev, "AP1302 Driver: %s\n",AP1302_DRV_TAG); */
 +	dev_info(ap1302->dev, "AP1302 Driver\n");
-+	
++
 +	mutex_init(&ap1302->lock);
 +
 +	ap1302->regmap16 = devm_regmap_init_i2c(client, &ap1302_reg16_config);
