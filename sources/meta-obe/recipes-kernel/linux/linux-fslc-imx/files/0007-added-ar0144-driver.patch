@@ -762,7 +762,7 @@ index 000000000..6de45006c
 +	v4l2_i2c_subdev_init(&ar0144->sd, client, &ar0144_subdev_ops);
 +	ar0144->sd.flags |= V4L2_SUBDEV_FL_HAS_DEVNODE;
 +	ar0144->sd.entity.function = MEDIA_ENT_F_CAM_SENSOR;
-+	ar0144->sd->entity.ops = &ar0144_media_ops;
++	ar0144->sd.entity.ops = &ar0144_media_ops;
 +	ar0144->pad.flags = MEDIA_PAD_FL_SOURCE;
 +	ar0144->sd.dev = &client->dev;
 +
