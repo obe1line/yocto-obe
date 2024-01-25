@@ -9,6 +9,7 @@ SRC_URI:append = " file://0006-added-debug-to-ap1302.patch"
 SRC_URI:append = " file://0007-added-ar0144-driver.patch"
 SRC_URI:append = " file://0008-imx8mn-ddr4-evk-Add-DTS-for-AR0144.patch"
 SRC_URI:append = " file://0009-added-ar0144-into-config.patch"
+SRC_URI:append = " file://0010-added-ar0144-into-makefile.patch"
 SRC_URI:append = " file://obe6157-defconfig"
 
 KCONFIG_MODE = "--allnoconfig"

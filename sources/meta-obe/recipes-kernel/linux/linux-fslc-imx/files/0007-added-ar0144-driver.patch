@@ -38,7 +38,7 @@ index 000000000..6de45006c
 +
 +#define AR0144_I2C_ADDR      0x10
 +#define AR0144_ID_REG        0x3000
-+#define AR0144_ID_VAL        0x1356
++#define AR0144_ID_VAL        0x0356
 +
 +struct ar0144_reg_value {
 +	u16 reg;
@@ -762,11 +762,11 @@ index 000000000..6de45006c
 +		return ret;
 +	}
 +
-+	ret = ar0144_s_power(&ar0144->sd, true);
++	/* ret = ar0144_s_power(&ar0144->sd, true);
 +	if (ret < 0) {
 +		dev_err(dev, "could not power up AR0144\n");
 +		goto free_entity;
-+	}
++	} */
 +
 +	dev_info(dev, "AR0144 detected at address 0x%02x\n", client->addr);
 +
