@@ -12,6 +12,9 @@ SRC_URI:append = " file://0009-added-ar0144-into-config.patch"
 SRC_URI:append = " file://0010-added-ar0144-into-makefile.patch"
 SRC_URI:append = " file://obe6157-defconfig"
 
+# Remove from the kernel version the additional string with commid ID of linux-imx repository
+SCMVERSION = "n"
+
 KCONFIG_MODE = "--allnoconfig"
 unset KBUILD_DEFCONFIG
 # linux-imx recipe forces a configuration, so use a delta config to adjust
