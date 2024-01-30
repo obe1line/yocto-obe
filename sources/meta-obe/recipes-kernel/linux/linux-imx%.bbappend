@@ -10,6 +10,7 @@ SRC_URI:append = " file://0007-added-ar0144-driver.patch"
 SRC_URI:append = " file://0008-imx8mn-ddr4-evk-Add-DTS-for-AR0144.patch"
 SRC_URI:append = " file://0009-added-ar0144-into-config.patch"
 SRC_URI:append = " file://0010-added-ar0144-into-makefile.patch"
+SRC_URI:append = " file://0011-added-ISI-image-format-for-RAW12.patch"
 SRC_URI:append = " file://obe6157-defconfig"
 
 # Remove from the kernel version the additional string with commid ID of linux-imx repository

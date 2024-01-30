@@ -5,8 +5,8 @@ LINUX_VERSION="6.1.55"
 FILES_PATH=$(cd `dirname $0` && pwd -P)/linux-fslc-imx/files
 pushd ~/linux-$LINUX_VERSION
 # to add new default config settings for a later kernel, run the following commands and see .config
-# cp $FILES_PATH/obe6157-defconfig ~/linux-$LINUX_VERSION/.config
-# make olddefconfig
+cp $FILES_PATH/obe6157-defconfig ~/linux-$LINUX_VERSION/.config
+make olddefconfig
 #
 # apply the patches
 # git apply $FILES_PATH/0001-new-ap1302-driver.patch
@@ -18,6 +18,8 @@ pushd ~/linux-$LINUX_VERSION
 # git apply $FILES_PATH/0007-added-ar0144-driver.patch
 # git apply $FILES_PATH/0008-imx8mn-ddr4-evk-Add-DTS-for-AR0144.patch
 # git apply $FILES_PATH/0009-added-ar0144-into-config.patch
+# git apply $FILES_PATH/0010-added-ar0144-into-makefile.patch
+# git apply $FILES_PATH/0011-added-ISI-image-format-for-RAW12.patch
 #
 # build
 # make -j`nproc`
