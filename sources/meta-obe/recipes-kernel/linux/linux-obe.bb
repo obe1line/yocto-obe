@@ -20,16 +20,20 @@ FILESEXTRAPATHS:prepend := "${THISDIR}/linux-obe/files:"
 SRC_URI = ""
 SRC_URI:append = "http://cdn.kernel.org/pub/linux/kernel/v6.x/linux-${LINUX_VERSION}.tar.xz;name=machine "
 SRC_URI:append = "https://git.yoctoproject.org/yocto-kernel-cache/snapshot/yocto-kernel-cache-yocto-6.6.tar.gz;type=kmeta;name=meta;branch=yocto-6.6;destsuffix=${KMETA} "
-#SRC_URI:append = "file://0001-updated-imx8mn-dts-from-nxp-repo.patch "
+
+# old?
 #SRC_URI:append = "file://0002-imx8mn-ddr4-evk-Add-DTS-for-AP1302-ISP.patch "
-#SRC_URI:append = "file://0003-copied-top-dtsi-for-imx8mn-from-nxp-repo.patch "
 #SRC_URI:append = "file://0004-Add-camera-DTS-to-Makefile.patch "
-#SRC_URI:append = "file://0005-Added-voltage-regulators-to-adv7535.patch "
 #SRC_URI:append = "file://0006-Added-ap1302-driver-makefile-and-Kconfig.patch "
+
+# device trees from linux-imx repository
+SRC_URI:append = "file://0001-updated-device-tree-to-linux-imx-ones.patch "
+
 # ar0144 driver and dts
 SRC_URI:append = "file://0001-added-ar0144-dts.patch "
 SRC_URI:append = "file://0002-added-ar0144-dtb-into-makefile.patch "
 SRC_URI:append = "file://0003-added-ar0144-driver.patch "
+
 # configuration
 SRC_URI:append = "file://obe-defconfig "
 
