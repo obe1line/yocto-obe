@@ -28,6 +28,8 @@ SRC_URI:append = "https://git.yoctoproject.org/yocto-kernel-cache/snapshot/yocto
 
 # device trees from linux-imx repository
 SRC_URI:append = "file://0001-updated-device-tree-to-linux-imx-ones.patch "
+# fix the regulators
+SRC_URI:append = "file://0005-Added-voltage-regulators-to-adv7535.patch "
 
 # ar0144 driver and dts
 SRC_URI:append = "file://0001-added-ar0144-dts.patch "
