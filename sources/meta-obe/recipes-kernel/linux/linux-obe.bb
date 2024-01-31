@@ -64,7 +64,7 @@ KERNEL_EXTRA_ARGS += "LOADADDR=${UBOOT_ENTRYPOINT}"
 do_deploy:append:mx8m-generic-bsp() {
     # not sure why the dtb does not get copied to the u-boot folder, for now force a copy
     bbwarn "Hack to copy dtb to the uboot directory"
-    local dtb_file="imx8mn-ddr4-evk-ap1302.dtb"
+    local dtb_file="imx8mn-ddr4-evk-ar0144.dtb"
     local src_path="${B}/arch/arm64/boot/dts/freescale"
     local dest_path="${B}/../../../u-boot-imx/2023.04/build/imx8mn_ddr4_evk_defconfig/arch/arm/dts"
     install -m 0644 "${src_path}/${dtb_file}"  "${dest_path}/${dtb_file}"
