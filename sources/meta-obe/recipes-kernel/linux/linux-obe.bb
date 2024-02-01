@@ -21,23 +21,18 @@ SRC_URI = ""
 SRC_URI:append = "http://cdn.kernel.org/pub/linux/kernel/v6.x/linux-${LINUX_VERSION}.tar.xz;name=machine "
 SRC_URI:append = "https://git.yoctoproject.org/yocto-kernel-cache/snapshot/yocto-kernel-cache-yocto-6.6.tar.gz;type=kmeta;name=meta;branch=yocto-6.6;destsuffix=${KMETA} "
 
-# old?
-#SRC_URI:append = "file://0002-imx8mn-ddr4-evk-Add-DTS-for-AP1302-ISP.patch "
-#SRC_URI:append = "file://0004-Add-camera-DTS-to-Makefile.patch "
-#SRC_URI:append = "file://0006-Added-ap1302-driver-makefile-and-Kconfig.patch "
-
 # device trees from linux-imx repository
-SRC_URI:append = "file://0001-updated-device-tree-to-linux-imx-ones.patch "
+# SRC_URI:append = "file://0001-updated-device-tree-to-linux-imx-ones.patch "
 # fix the regulators
-SRC_URI:append = "file://0005-Added-voltage-regulators-to-adv7535.patch "
+#SRC_URI:append = "file://0005-Added-voltage-regulators-to-adv7535.patch "
 
 # ar0144 driver and dts
-SRC_URI:append = "file://0001-added-ar0144-dts.patch "
-SRC_URI:append = "file://0002-added-ar0144-dtb-into-makefile.patch "
-SRC_URI:append = "file://0003-added-ar0144-driver.patch "
+#SRC_URI:append = "file://0001-added-ar0144-dts.patch "
+#SRC_URI:append = "file://0002-added-ar0144-dtb-into-makefile.patch "
+#SRC_URI:append = "file://0003-added-ar0144-driver.patch "
 
 # configuration
-SRC_URI:append = "file://obe-defconfig "
+SRC_URI:append = "file://obe66-defconfig "
 
 SRC_URI[machine.sha256sum] = "fbe96b2db3f962cd2a96a849d554300e7a4555995160082d4f323c2a1dfa1584"
 SRC_URI[meta.sha256sum] = "213f4d13def33bb493249b9ce2d7e15b8035966286802c325a38b274e5067c8b"
@@ -49,8 +44,7 @@ PV = "${LINUX_VERSION}"
 
 # TODO: when all config is working, use KCONFIG_MODE = "--allnoconfig"
 KCONFIG_MODE = "--alldefconfig"
-KERNEL_DEFCONFIG = "obe-defconfig"
-
+KERNEL_DEFCONFIG = "obe66-defconfig"
 KERNEL_DEVICETREE = " freescale/${KERNEL_DEVICETREE_BASENAME}.dtb "
 
 KCONF_BSP_AUDIT_LEVEL = "1"

@@ -1,0 +1,38 @@
+From 7cbc85d5c8a2147eacb178edbc650d68e0d4906b Mon Sep 17 00:00:00 2001
+From: Chris Storah <chris.storah@gmail.com>
+Date: Wed, 1 Nov 2023 16:39:44 +1100
+Subject: [PATCH 2/2] Added voltage regulators to adv7535
+
+---
+ arch/arm64/boot/dts/freescale/imx8mn-evk.dtsi | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/freescale/imx8mn-evk.dtsi b/arch/arm64/boot/dts/freescale/imx8mn-evk.dtsi
+index 05ad0fe8e..f58cab99f 100644
+--- a/arch/arm64/boot/dts/freescale/imx8mn-evk.dtsi
++++ b/arch/arm64/boot/dts/freescale/imx8mn-evk.dtsi
+@@ -255,6 +255,21 @@ adv_bridge: adv7535@3d {
+ 		adi,addr-cec = <0x3b>;
+ 		adi,dsi-lanes = <4>;
+ 		status = "okay";
++		avdd-supply = <&v1v8>;
++		dvdd-supply = <&v1v8>;
++		pvdd-supply = <&v1v8>;
++		a2vdd-supply = <&v1v8>;
++		v3p3-supply = <&v3v3>;
++		v1p2-supply = <&v1v8>;  /* 7535 requires 1V8 on this pin */
++
++		v1v8: v1v8-regulator {
++			regulator-min-microvolt = <1800000>;
++			regulator-max-microvolt = <1800000>;
++		};
++		v3v3: v3v3-regulator {
++			regulator-min-microvolt = <3300000>;
++			regulator-max-microvolt = <3300000>;
++		};
+ 
+ 		port {
+ 			adv7535_from_dsim: endpoint {
+-- 
+2.39.2
+
