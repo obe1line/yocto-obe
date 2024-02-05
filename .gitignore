@@ -12,6 +12,8 @@ build/workspace
 
 
 # sources
+sources/bitbake
+sources/openembedded-core
 sources/poky
 sources/meta-openembedded
 sources/meta-freescale

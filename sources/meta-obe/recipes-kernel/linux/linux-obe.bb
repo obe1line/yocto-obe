@@ -22,14 +22,14 @@ SRC_URI:append = "http://cdn.kernel.org/pub/linux/kernel/v6.x/linux-${LINUX_VERS
 SRC_URI:append = "https://git.yoctoproject.org/yocto-kernel-cache/snapshot/yocto-kernel-cache-yocto-6.6.tar.gz;type=kmeta;name=meta;branch=yocto-6.6;destsuffix=${KMETA} "
 
 # device trees from linux-imx repository
-# SRC_URI:append = "file://0001-updated-device-tree-to-linux-imx-ones.patch "
+SRC_URI:append = "file://0001-updated-device-tree-to-linux-imx-ones.patch "
 # fix the regulators
-#SRC_URI:append = "file://0005-Added-voltage-regulators-to-adv7535.patch "
+SRC_URI:append = "file://0005-Added-voltage-regulators-to-adv7535.patch "
 
 # ar0144 driver and dts
-#SRC_URI:append = "file://0001-added-ar0144-dts.patch "
-#SRC_URI:append = "file://0002-added-ar0144-dtb-into-makefile.patch "
-#SRC_URI:append = "file://0003-added-ar0144-driver.patch "
+SRC_URI:append = "file://0001-added-ar0144-dts.patch "
+SRC_URI:append = "file://0002-added-ar0144-dtb-into-makefile.patch "
+SRC_URI:append = "file://0003-added-ar0144-driver.patch "
 
 # configuration
 SRC_URI:append = "file://obe66-defconfig "
@@ -60,11 +60,9 @@ do_deploy:append:mx8m-generic-bsp() {
     bbwarn "Hack to copy dtb to the uboot directory"
     local dtb_file="imx8mn-ddr4-evk-ar0144.dtb"
     local src_path="${B}/arch/arm64/boot/dts/freescale"
-    local dest_path="${B}/../../../u-boot-imx/2023.04/build/imx8mn_ddr4_evk_defconfig/arch/arm/dts"
+    local dest_path="${B}/../../../u-boot-fslc/2023.10+git/build/imx8mn_ddr4_evk_defconfig/arch/arm/dts"
     install -m 0644 "${src_path}/${dtb_file}"  "${dest_path}/${dtb_file}"
     unset dest_path
     unset src_path
     unset dtb_path
 }
-
-

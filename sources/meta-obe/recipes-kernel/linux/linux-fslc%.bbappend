@@ -12,6 +12,7 @@
 
 #SRC_URI:append = " file://kernel-6-6-defconfig"
 
+unset KERNEL_DEVICETREE
 KERNEL_DEVICETREE = " freescale/${KERNEL_DEVICETREE_BASENAME}.dtb "
 
 # TODO: use KCONFIG_MODE = "--alldefconfig" or --"allnoconfig"
