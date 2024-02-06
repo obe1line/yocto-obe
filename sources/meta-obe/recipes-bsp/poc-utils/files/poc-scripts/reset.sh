@@ -1,0 +1,12 @@
+# write to expander on 0x34 address (no driver loaded) to enable power for AP1302
+
+i2cdetect -y 2
+
+# reset
+i2cset -y 2 0x34 0x23 0x00
+i2cset -y 2 0x34 0x24 0x00
+i2cset -y 2 0x34 0x27 0x00
+i2cset -y 2 0x34 0x28 0x00
+
+i2cdetect -y 2
+

@@ -1,9 +1,11 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/linux-fslc/files:"
 
-# device trees from linux-imx repository
-#SRC_URI:append = " file://0001-updated-device-tree-to-linux-imx-ones.patch"
-# fix the regulators
-#SRC_URI:append = " file://0005-Added-voltage-regulators-to-adv7535.patch"
+# add POC device trees
+SRC_URI:append = " file://0002-device-tree-supporting-ov5640.patch"
+SRC_URI:append = " file://0003-added-poc-dtb-into-makefile.patch"
+
+# add orientation to camera for mandatory libcamera property
+# SRC_URI:append = " file://0001-added-orientation-to-ov5640-in-dts.patch"
 
 # ar0144 driver and dts
 #SRC_URI:append = " file://0001-added-ar0144-dts.patch"

@@ -15,7 +15,7 @@ index 89aee6c92..c8240c0b2 100644
  dtb-$(CONFIG_ARCH_MXC) += imx8mn-evk.dtb
  dtb-$(CONFIG_ARCH_MXC) += imx8mn-ddr3l-evk.dtb
  dtb-$(CONFIG_ARCH_MXC) += imx8mn-ddr4-evk.dtb
-+dtb-$(CONFIG_ARCH_MXC) += imx8mn-ddr4-evk-ar0144.dtb
++dtb-$(CONFIG_ARCH_MXC) += poc.dtb
  dtb-$(CONFIG_ARCH_MXC) += imx8mn-tqma8mqnl-mba8mx.dtb
  dtb-$(CONFIG_ARCH_MXC) += imx8mn-var-som-symphony.dtb
  dtb-$(CONFIG_ARCH_MXC) += imx8mn-venice-gw7902.dtb

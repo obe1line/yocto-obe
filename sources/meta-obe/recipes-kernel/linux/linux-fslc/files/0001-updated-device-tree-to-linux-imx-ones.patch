@@ -430,6 +430,7 @@ index 0e60995a5727..c9bc4d81a136 100644
 +		csi_id = <0>;
  		powerdown-gpios = <&gpio1 7 GPIO_ACTIVE_HIGH>;
  		reset-gpios = <&gpio1 6 GPIO_ACTIVE_LOW>;
+		orientation = <2>;
 -
 +		mclk = <24000000>;
 +		mclk_source = <0>;
