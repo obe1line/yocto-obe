@@ -39,15 +39,15 @@ index 000000000000..7bf7db0a0927
 +                csi_id = <0x00>;
 +                /* powerdown-gpios = <&gpio1 7 GPIO_ACTIVE_HIGH>; */
 +                /* reset-gpios = <&gpio1 6 GPIO_ACTIVE_LOW>; */
-+		orientation = <2>;
++                orientation = <2>;
 +                mclk = <24000000>;
 +                mclk_source = <0>;
 +                mipi_csi;
 +                status = "okay";
 +
 +                port {
-+                        camera_ep_0: endpoint {
-+                                remote-endpoint = <&mipi1_sensor_ep>;
++                        ar0144_to_mipi_csi2: endpoint {
++                                remote-endpoint = <&imx8mn_mipi_csi_in>;
 +                                /* link-frequencies = /bits/ 64 <900000000>; */
 +                                clock-lanes = <0>;
 +                                data-lanes = <1 2>;
@@ -67,7 +67,7 @@ index 000000000000..7bf7db0a0927
 +	ports {
 +		port@0 {
 +			imx8mn_mipi_csi_in: endpoint {
-+				remote-endpoint = <&ov5640_to_mipi_csi2>;
++				remote-endpoint = <&ar0144_to_mipi_csi2>;
 +				data-lanes = <1 2>;
 +			};
 +		};

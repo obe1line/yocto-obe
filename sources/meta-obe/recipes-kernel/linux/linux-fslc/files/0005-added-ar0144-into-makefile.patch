@@ -1,0 +1,24 @@
+From d24dda4ea5a349add90bf5231effbaa823828acd Mon Sep 17 00:00:00 2001
+From: Chris Storah <chris.storah@gmail.com>
+Date: Thu, 25 Jan 2024 20:40:42 +1100
+Subject: [PATCH] added-ar0144-into-makefile
+
+---
+ drivers/media/i2c/Makefile | 1 ++
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/media/i2c/Makefile b/drivers/media/i2c/Makefile
+index 80b00d39b48f..7e48a0892528 100644
+--- a/drivers/media/i2c/Makefile
++++ b/drivers/media/i2c/Makefile
+@@ -19,6 +19,7 @@ obj-$(CONFIG_VIDEO_AK7375) += ak7375.o
+ obj-$(CONFIG_VIDEO_AK881X) += ak881x.o
+ obj-$(CONFIG_VIDEO_APTINA_PLL) += aptina-pll.o
+ obj-$(CONFIG_VIDEO_AR0521) += ar0521.o
++obj-$(CONFIG_VIDEO_AR0144) += ar0144.o
+ obj-$(CONFIG_VIDEO_BT819) += bt819.o
+ obj-$(CONFIG_VIDEO_BT856) += bt856.o
+ obj-$(CONFIG_VIDEO_BT866) += bt866.o
+-- 
+2.39.2
+
