@@ -446,7 +446,7 @@ index 000000000000..776fccea3d59
 +		#gpio-cells = <2>;
 +	};
 +
-+	camera@3c {
++	ov5640_camera@3c {
 +		compatible = "ovti,ov5640";
 +		reg = <0x3c>;
 +		pinctrl-names = "default";

@@ -1,0 +1,78 @@
+From e7008af88ca02040ddbe22413bcd58868dcea86f Mon Sep 17 00:00:00 2001
+From: Chris Storah <chris.storah@gmail.com>
+Date: Wed, 7 Feb 2024 01:07:51 +0000
+Subject: [PATCH] added ar0144 dts
+
+---
+ arch/arm64/boot/dts/freescale/poc-ar0144.dts | 59 ++++++++++++++++++++
+ 1 file changed, 59 insertions(+)
+ create mode 100644 arch/arm64/boot/dts/freescale/poc-ar0144.dts
+
+diff --git a/arch/arm64/boot/dts/freescale/poc-ar0144.dts b/arch/arm64/boot/dts/freescale/poc-ar0144.dts
+new file mode 100644
+index 000000000000..7bf7db0a0927
+--- /dev/null
++++ b/arch/arm64/boot/dts/freescale/poc-ar0144.dts
+@@ -0,0 +1,59 @@
++// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
++/*
++ * Copyright 2024 
++ */
++
++/dts-v1/;
++
++#include "poc.dts"
++
++&i2c3 {
++        /delete-node/ov5640_camera@3c;
++
++        ar0144_camera@10 {
++                compatible = "onnn,ar0144";
++                reg = <0x10>;
++                /* pinctrl-names = "default"; */
++                /* pinctrl-0 = <&pinctrl_csi_pwn>, <&pinctrl_csi_rst>; */
++                clocks = <&clk IMX8MN_CLK_CLKO1>;
++                clock-names = "xclk";
++                assigned-clocks = <&clk IMX8MN_CLK_CLKO1>;
++                assigned-clock-parents = <&clk IMX8MN_CLK_24M>;
++                assigned-clock-rates = <24000000>;
++                csi_id = <0x00>;
++                /* powerdown-gpios = <&gpio1 7 GPIO_ACTIVE_HIGH>; */
++                /* reset-gpios = <&gpio1 6 GPIO_ACTIVE_LOW>; */
++		orientation = <2>;
++                mclk = <24000000>;
++                mclk_source = <0>;
++                mipi_csi;
++                status = "okay";
++
++                port {
++                        camera_ep_0: endpoint {
++                                remote-endpoint = <&mipi1_sensor_ep>;
++                                /* link-frequencies = /bits/ 64 <900000000>; */
++                                clock-lanes = <0>;
++                                data-lanes = <1 2>;
++                        };
++                };
++        };
++};
++
++
++&isi {
++	status = "okay";
++};
++
++&mipi_csi {
++	status = "okay";
++
++	ports {
++		port@0 {
++			imx8mn_mipi_csi_in: endpoint {
++				remote-endpoint = <&ov5640_to_mipi_csi2>;
++				data-lanes = <1 2>;
++			};
++		};
++	};
++};
+-- 
+2.39.2
+
