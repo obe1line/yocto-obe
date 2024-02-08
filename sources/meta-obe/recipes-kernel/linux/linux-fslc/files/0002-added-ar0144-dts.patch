@@ -37,8 +37,8 @@ index 000000000000..7bf7db0a0927
 +                assigned-clock-parents = <&clk IMX8MN_CLK_24M>;
 +                assigned-clock-rates = <24000000>;
 +                csi_id = <0x00>;
-+                /* powerdown-gpios = <&gpio1 7 GPIO_ACTIVE_HIGH>; */
-+                /* reset-gpios = <&gpio1 6 GPIO_ACTIVE_LOW>; */
++                powerdown-gpios = <&gpio1 7 GPIO_ACTIVE_HIGH>;
++                reset-gpios = <&gpio1 6 GPIO_ACTIVE_LOW>;
 +                orientation = <2>;
 +                mclk = <24000000>;
 +                mclk_source = <0>;
