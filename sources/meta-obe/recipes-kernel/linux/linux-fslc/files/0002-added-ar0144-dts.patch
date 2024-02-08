@@ -29,8 +29,8 @@ index 000000000000..7bf7db0a0927
 +        ar0144_camera@10 {
 +                compatible = "onnn,ar0144";
 +                reg = <0x10>;
-+                /* pinctrl-names = "default"; */
-+                /* pinctrl-0 = <&pinctrl_csi_pwn>, <&pinctrl_csi_rst>; */
++                pinctrl-names = "default";
++                pinctrl-0 = <&pinctrl_camera>;
 +                clocks = <&clk IMX8MN_CLK_CLKO1>;
 +                clock-names = "xclk";
 +                assigned-clocks = <&clk IMX8MN_CLK_CLKO1>;

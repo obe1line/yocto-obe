@@ -19,3 +19,15 @@ KERNEL_DEVICETREE:append = " freescale/${KERNEL_DEVICETREE_BASENAME}-ar0144.dtb 
 # KCONFIG_MODE = "--allnoconfig"
 unset KBUILD_DEFCONFIG
 KERNEL_DEFCONFIG = "kernel-6-6-defconfig"
+
+# TEMPORARY HACK to copy additional dtbs - will not be required after refactoring machine/distros
+do_deploy:append() {
+    bbwarn "Hack to copy dtb to the uboot directory"
+    local dtb_file="poc-ar0144.dtb"
+    local src_path="${B}/arch/arm64/boot/dts/freescale"
+    local dest_path="${B}/../../../u-boot-fslc/2023.10+git/build/imx8mn_ddr4_evk_defconfig/arch/arm/dts"
+    install -m 0644 "${src_path}/${dtb_file}"  "${dest_path}/${dtb_file}"
+    unset dest_path
+    unset src_path
+    unset dtb_path
+}

@@ -34,7 +34,7 @@ new file mode 100644
 index 000000000..a16a66b81
 --- /dev/null
 +++ b/drivers/media/i2c/ar0144.c
-@@ -0,0 +1,812 @@
+@@ -0,0 +1,811 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Driver for the AR0144 Image Sensor Processor
@@ -734,8 +734,7 @@ index 000000000..a16a66b81
 +    .link_setup = ar0144_link_setup,
 +};
 +
-+static int ar0144_probe(struct i2c_client *client,
-+			const struct i2c_device_id *id)
++static int ar0144_probe(struct i2c_client *client)
 +{
 +	struct device *dev = &client->dev;
 +	struct device_node *endpoint;
