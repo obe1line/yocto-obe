@@ -24,7 +24,7 @@ index 000000000000..7bf7db0a0927
 +#include "poc.dts"
 +
 +&i2c3 {
-+        /delete-node/ov5640_camera@3c;
++        /delete-node/ ov5640_camera@3c;
 +
 +        ar0144_camera@10 {
 +                compatible = "onnn,ar0144";

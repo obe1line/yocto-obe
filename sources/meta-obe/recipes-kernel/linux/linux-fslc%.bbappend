@@ -4,6 +4,7 @@ FILESEXTRAPATHS:prepend := "${THISDIR}/linux-fslc/files:"
 SRC_URI:append = " file://0001-device-tree-supporting-ov5640.patch"
 SRC_URI:append = " file://0002-added-ar0144-dts.patch"
 SRC_URI:append = " file://0003-added-poc-dtb-into-makefile.patch"
+SRC_URI:append = " file://0006-added-regulators-to-hdmi-adv7535.patch"
 
 # ar0144 driver
 SRC_URI:append = " file://0004-added-ar0144-driver.patch"
