@@ -1,40 +1,19 @@
-From c41ff65af29db1a83eea126d6460d5d62ffc7b10 Mon Sep 17 00:00:00 2001
-From: Your Name <you@example.com>
-Date: Wed, 31 Jan 2024 03:19:17 +0000
-Subject: [PATCH 3/3] added ar0144 driver
+From 7932823dc7896f5b106d560cc4083273f8b4c142 Mon Sep 17 00:00:00 2001
+From: Chris Storah <chris.storah@gmail.com>
+Date: Mon, 12 Feb 2024 18:08:35 +1100
+Subject: [PATCH] added ar0144 driver
 
 ---
- drivers/media/i2c/Kconfig  |   9 +
- drivers/media/i2c/ar0144.c | 812 +++++++++++++++++++++++++++++++++++++
- 2 files changed, 821 insertions(+)
+ drivers/media/i2c/ar0144.c | 898 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 898 insertions(+)
  create mode 100644 drivers/media/i2c/ar0144.c
 
-diff --git a/drivers/media/i2c/Kconfig b/drivers/media/i2c/Kconfig
-index 53b443be5..42329a0c7 100644
---- a/drivers/media/i2c/Kconfig
-+++ b/drivers/media/i2c/Kconfig
-@@ -41,6 +41,15 @@ config VIDEO_APTINA_PLL
- config VIDEO_CCS_PLL
- 	tristate
- 
-+config VIDEO_AR0144
-+	tristate "ON Semiconductor AR0144 sensor support"
-+	help
-+	  This is a Video4Linux2 sensor driver for the ON Semiconductor
-+	  AR0144 camera.
-+
-+	  To compile this driver as a module, choose M here: the
-+	  module will be called ar0144.
-+
- config VIDEO_AR0521
- 	tristate "ON Semiconductor AR0521 sensor support"
- 	help
 diff --git a/drivers/media/i2c/ar0144.c b/drivers/media/i2c/ar0144.c
 new file mode 100644
-index 000000000..a16a66b81
+index 000000000000..273d7d2e8f4b
 --- /dev/null
 +++ b/drivers/media/i2c/ar0144.c
-@@ -0,0 +1,811 @@
+@@ -0,0 +1,898 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Driver for the AR0144 Image Sensor Processor
@@ -56,6 +35,7 @@ index 000000000..a16a66b81
 +#include <linux/types.h>
 +#include <media/v4l2-fwnode.h>
 +#include <media/v4l2-subdev.h>
++#include <media/v4l2-ctrls.h>
 +
 +#define AR0144_I2C_ADDR      0x10
 +#define AR0144_ID_REG        0x3000
@@ -66,6 +46,16 @@ index 000000000..a16a66b81
 +	u16 val;
 +};
 +
++
++struct ar0144_ctrls {
++	struct v4l2_ctrl_handler handler;
++	struct {
++		struct v4l2_ctrl *hblank;
++		struct v4l2_ctrl *vblank;
++	};
++	struct v4l2_ctrl *pixel_rate;
++};
++
 +struct ar0144 {
 +	struct i2c_client *i2c_client;
 +	struct device *dev;
@@ -74,7 +64,8 @@ index 000000000..a16a66b81
 +	struct v4l2_fwnode_endpoint ep;
 +	struct v4l2_mbus_framefmt fmt;
 +	struct v4l2_rect crop;
-+
++	struct v4l2_ctrl_handler hdl;
++	struct ar0144_ctrls ctrls;
 +	struct gpio_desc *rst_gpio;
 +	struct mutex lock;
 +
@@ -84,6 +75,11 @@ index 000000000..a16a66b81
 +static inline struct ar0144 *to_ar0144(struct v4l2_subdev *sd)
 +{
 +	return container_of(sd, struct ar0144, sd);
++}
++
++static inline struct v4l2_subdev *ctrl_to_sd(struct v4l2_ctrl *ctrl)
++{
++	return &container_of(ctrl->handler, struct ar0144, ctrls.handler)->sd;
 +}
 +
 +static const struct ar0144_reg_value ar0144at_rev4_optimized_sequencer[] = {
@@ -734,6 +730,70 @@ index 000000000..a16a66b81
 +    .link_setup = ar0144_link_setup,
 +};
 +
++static int ar0144_g_volatile_ctrl(struct v4l2_ctrl *ctrl)
++{
++	struct v4l2_subdev *sd = ctrl_to_sd(ctrl);
++	struct ar0144 *sensor = to_ar0144(sd);
++	int val;
++
++	// Power management
++	// if (!pm_runtime_get_if_in_use(&sensor->i2c_client->dev))
++		// return 0;
++
++	switch (ctrl->id) {
++	case V4L2_CID_HBLANK:
++		sensor->ctrls.hblank->val = 208;	// hardcode for now
++		break;
++	case V4L2_CID_VBLANK:
++		sensor->ctrls.hblank->val = 27;		// hardcode for now
++		break;
++	case V4L2_CID_PIXEL_RATE:
++		sensor->ctrls.pixel_rate->val = 24000000;		// hardcode for now
++		break;
++	}
++
++	// Power management
++	// pm_runtime_mark_last_busy(&sensor->i2c_client->dev);
++	// pm_runtime_put_autosuspend(&sensor->i2c_client->dev);
++
++	return 0;
++}
++
++static const struct v4l2_ctrl_ops ar0144_ctrl_ops = {
++	.g_volatile_ctrl = ar0144_g_volatile_ctrl,
++	// .s_ctrl = ar0144_s_ctrl,		// no set yet
++};
++
++static int ar0144_init_controls(struct ar0144 *sensor) {
++	int ret = 0;
++	const struct v4l2_ctrl_ops *ops = &ar0144_ctrl_ops;
++	struct ar0144_ctrls *ctrls = &sensor->ctrls;
++	struct v4l2_ctrl_handler *ctrl_handler = &ctrls->handler;
++
++	v4l2_ctrl_handler_init(ctrl_handler, 3);
++
++	ctrl_handler->lock = &sensor->lock;
++
++	uint hblank = 0;
++	uint vblank = 0;
++	uint pixel_rate = 0;
++
++	ctrls->pixel_rate = v4l2_ctrl_new_std(ctrl_handler, ops, V4L2_CID_PIXEL_RATE, pixel_rate, pixel_rate, 1, pixel_rate);
++	ctrls->hblank = v4l2_ctrl_new_std(ctrl_handler, ops, V4L2_CID_HBLANK, hblank, hblank, 1, hblank);
++	ctrls->vblank = v4l2_ctrl_new_std(ctrl_handler, ops, V4L2_CID_VBLANK, vblank, vblank, 1, vblank);
++
++	ctrls->pixel_rate->flags |= V4L2_CTRL_FLAG_READ_ONLY;
++	ctrls->hblank->flags |= V4L2_CTRL_FLAG_READ_ONLY;
++	ctrls->vblank->flags |= V4L2_CTRL_FLAG_READ_ONLY;
++
++	sensor->sd.ctrl_handler = ctrl_handler;
++	return ret;
++
++free_ctrls:
++	v4l2_ctrl_handler_free(ctrl_handler);
++	return ret;
++};
++
 +static int ar0144_probe(struct i2c_client *client)
 +{
 +	struct device *dev = &client->dev;
@@ -800,6 +860,12 @@ index 000000000..a16a66b81
 +
 +	dev_info(dev, "AR0144 detected at address 0x%02x\n", client->addr);
 +
++	ret = ar0144_init_controls(ar0144);
++	if (ret < 0) {
++		dev_err(dev, "could not initialise controls\n");
++		goto free_entity;
++	}
++	
 +	ret = v4l2_async_register_subdev(&ar0144->sd);
 +	if (ret < 0) {
 +		dev_err(dev, "could not register v4l2 device\n");
@@ -847,5 +913,5 @@ index 000000000..a16a66b81
 +MODULE_DESCRIPTION("ON Semiconductor AR0144 Camera Sensor");
 +MODULE_LICENSE("GPL v2");
 -- 
-2.34.1
+2.39.2
 

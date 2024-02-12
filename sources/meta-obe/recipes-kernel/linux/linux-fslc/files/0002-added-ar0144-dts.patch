@@ -16,7 +16,7 @@ index 000000000000..7bf7db0a0927
 @@ -0,0 +1,59 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
-+ * Copyright 2024 
++ * Copyright 2024
 + */
 +
 +/dts-v1/;
