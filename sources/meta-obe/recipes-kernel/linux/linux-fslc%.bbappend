@@ -1,6 +1,4 @@
-OBE_FILES := "${THISDIR}/linux-fslc/files"
-#FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
-FILESEXTRAPATHS:prepend := "${OBE_FILES}:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/linux-fslc/files:"
 
 # add device trees
 SRC_URI:append = " file://patches/0001-device-tree-supporting-ov5640.patch"
@@ -20,6 +18,11 @@ unset KERNEL_DEVICETREE
 KERNEL_DEVICETREE = " freescale/${KERNEL_DEVICETREE_BASENAME}.dtb "
 KERNEL_DEVICETREE:append = " freescale/${KERNEL_DEVICETREE_BASENAME}-ar0144.dtb "
 
+# prevent the camera drivers auto-loading as they conflict during development
+KERNEL_MODULE_AUTOLOAD:remove = "ov5640"
+KERNEL_MODULE_AUTOLOAD:remove = "ar0144"
+
+# TODO: set extlinux.conf to correct dtb
 
 # TEMPORARY HACK to copy additional dtbs - will not be required after refactoring machine/distros
 do_deploy:append() {
