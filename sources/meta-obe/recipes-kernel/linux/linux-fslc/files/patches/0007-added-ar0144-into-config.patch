@@ -1,0 +1,32 @@
+From a5f6a196d71e4f2a67c64187d6b057ce22ac1739 Mon Sep 17 00:00:00 2001
+From: Chris Storah <chris.storah@gmail.com>
+Date: Fri, 16 Feb 2024 15:45:54 +1100
+Subject: [PATCH] added ar0144 into config
+
+---
+ drivers/media/i2c/Kconfig | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/drivers/media/i2c/Kconfig b/drivers/media/i2c/Kconfig
+index 74ff833ff48c..f46824cac2ef 100644
+--- a/drivers/media/i2c/Kconfig
++++ b/drivers/media/i2c/Kconfig
+@@ -200,6 +200,16 @@ config VIDEO_IMX415
+          To compile this driver as a module, choose M here: the
+          module will be called imx415.
+
++config VIDEO_AR0144
++       tristate "ON Semiconductor AR0144 sensor support"
++       depends on I2C && VIDEO_DEV
++       select MEDIA_CONTROLLER
++       select VIDEO_V4L2_SUBDEV_API
++       select V4L2_FWNODE
++       help
++         This is a V4L2 sensor-level driver for the ON Semiconductor AR0144
++         CMOS image sensor.
++
+ config VIDEO_MAX9271_LIB
+        tristate
+
+--
+2.39.2

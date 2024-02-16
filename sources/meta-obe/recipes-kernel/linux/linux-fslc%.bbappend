@@ -1,25 +1,25 @@
-FILESEXTRAPATHS:prepend := "${THISDIR}/linux-fslc/files:"
+OBE_FILES := "${THISDIR}/linux-fslc/files"
+#FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS:prepend := "${OBE_FILES}:"
 
 # add device trees
-SRC_URI:append = " file://0001-device-tree-supporting-ov5640.patch"
-SRC_URI:append = " file://0002-added-ar0144-dts.patch"
-SRC_URI:append = " file://0003-added-poc-dtb-into-makefile.patch"
-SRC_URI:append = " file://0006-added-regulators-to-hdmi-adv7535.patch"
+SRC_URI:append = " file://patches/0001-device-tree-supporting-ov5640.patch"
+SRC_URI:append = " file://patches/0002-added-ar0144-dts.patch"
+SRC_URI:append = " file://patches/0003-added-poc-dtb-into-makefile.patch"
+SRC_URI:append = " file://patches/0006-added-regulators-to-hdmi-adv7535.patch"
 
 # ar0144 driver
-SRC_URI:append = " file://0004-added-ar0144-driver.patch"
-SRC_URI:append = " file://0005-added-ar0144-into-makefile.patch"
+SRC_URI:append = " file://patches/0004-added-ar0144-driver.patch"
+SRC_URI:append = " file://patches/0005-added-ar0144-into-makefile.patch"
+SRC_URI:append = " file://patches/0007-added-ar0144-into-config.patch"
 
-SRC_URI:append = " file://kernel-6-6-defconfig"
+# kernel configuration
+SRC_URI:append = " file://config/kernel-6-6.cfg"
 
 unset KERNEL_DEVICETREE
 KERNEL_DEVICETREE = " freescale/${KERNEL_DEVICETREE_BASENAME}.dtb "
 KERNEL_DEVICETREE:append = " freescale/${KERNEL_DEVICETREE_BASENAME}-ar0144.dtb "
 
-# TODO: use KCONFIG_MODE = "--alldefconfig" or --"allnoconfig"
-# KCONFIG_MODE = "--allnoconfig"
-unset KBUILD_DEFCONFIG
-KERNEL_DEFCONFIG = "kernel-6-6-defconfig"
 
 # TEMPORARY HACK to copy additional dtbs - will not be required after refactoring machine/distros
 do_deploy:append() {
