@@ -1,22 +1,103 @@
-From 03f33c602836f18eea8d1d6bd85f660374789b79 Mon Sep 17 00:00:00 2001
+From 78385f009522e4250487eae4b9676ffcfc04fc93 Mon Sep 17 00:00:00 2001
 From: Chris Storah <chris.storah@gmail.com>
-Date: Wed, 7 Feb 2024 10:58:08 +1100
-Subject: [PATCH] device tree supporting ov5640
+Date: Wed, 21 Feb 2024 07:04:59 +0000
+Subject: [PATCH] added ar0144 dts
 
 ---
- arch/arm64/boot/dts/freescale/poc.dts   |  160 +++
- arch/arm64/boot/dts/freescale/poc1.dtsi |  690 ++++++++++++
- arch/arm64/boot/dts/freescale/poc2.dtsi | 1319 +++++++++++++++++++++++
- 3 files changed, 2169 insertions(+)
- create mode 100644 arch/arm64/boot/dts/freescale/poc.dts
- create mode 100644 arch/arm64/boot/dts/freescale/poc1.dtsi
- create mode 100644 arch/arm64/boot/dts/freescale/poc2.dtsi
+ arch/arm64/boot/dts/freescale/Makefile        |    2 +
+ .../freescale/imx8mn-ddr4-evk-poc-ar0144.dts  |   59 +
+ .../dts/freescale/imx8mn-ddr4-evk-poc.dts     |  160 ++
+ .../boot/dts/freescale/imx8mn-evk-poc.dtsi    |  690 +++++++++
+ arch/arm64/boot/dts/freescale/imx8mn-poc.dtsi | 1319 +++++++++++++++++
+ 5 files changed, 2230 insertions(+)
+ create mode 100644 arch/arm64/boot/dts/freescale/imx8mn-ddr4-evk-poc-ar0144.dts
+ create mode 100644 arch/arm64/boot/dts/freescale/imx8mn-ddr4-evk-poc.dts
+ create mode 100644 arch/arm64/boot/dts/freescale/imx8mn-evk-poc.dtsi
+ create mode 100644 arch/arm64/boot/dts/freescale/imx8mn-poc.dtsi
 
-diff --git a/arch/arm64/boot/dts/freescale/poc.dts b/arch/arm64/boot/dts/freescale/poc.dts
+diff --git a/arch/arm64/boot/dts/freescale/Makefile b/arch/arm64/boot/dts/freescale/Makefile
+index 89aee6c92576..eb540658c1ab 100644
+--- a/arch/arm64/boot/dts/freescale/Makefile
++++ b/arch/arm64/boot/dts/freescale/Makefile
+@@ -89,6 +89,8 @@ dtb-$(CONFIG_ARCH_MXC) += imx8mn-bsh-smm-s2pro.dtb
+ dtb-$(CONFIG_ARCH_MXC) += imx8mn-evk.dtb
+ dtb-$(CONFIG_ARCH_MXC) += imx8mn-ddr3l-evk.dtb
+ dtb-$(CONFIG_ARCH_MXC) += imx8mn-ddr4-evk.dtb
++dtb-$(CONFIG_ARCH_MXC) += imx8mn-ddr4-evk-poc.dtb
++dtb-$(CONFIG_ARCH_MXC) += imx8mn-ddr4-evk-poc-ar0144.dtb
+ dtb-$(CONFIG_ARCH_MXC) += imx8mn-tqma8mqnl-mba8mx.dtb
+ dtb-$(CONFIG_ARCH_MXC) += imx8mn-var-som-symphony.dtb
+ dtb-$(CONFIG_ARCH_MXC) += imx8mn-venice-gw7902.dtb
+diff --git a/arch/arm64/boot/dts/freescale/imx8mn-ddr4-evk-poc-ar0144.dts b/arch/arm64/boot/dts/freescale/imx8mn-ddr4-evk-poc-ar0144.dts
 new file mode 100644
-index 000000000000..421217ea1e6e
+index 000000000000..81b6e65a0e33
 --- /dev/null
-+++ b/arch/arm64/boot/dts/freescale/poc.dts
++++ b/arch/arm64/boot/dts/freescale/imx8mn-ddr4-evk-poc-ar0144.dts
+@@ -0,0 +1,59 @@
++// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
++/*
++ * Copyright 2024
++ */
++
++/dts-v1/;
++
++#include "imx8mn-ddr4-evk-poc.dts"
++
++&i2c3 {
++        /delete-node/ ov5640_camera@3c;
++
++        ar0144_camera@10 {
++                compatible = "onnn,ar0144";
++                reg = <0x10>;
++                pinctrl-names = "default";
++                pinctrl-0 = <&pinctrl_camera>;
++                clocks = <&clk IMX8MN_CLK_CLKO1>;
++                clock-names = "xclk";
++                assigned-clocks = <&clk IMX8MN_CLK_CLKO1>;
++                assigned-clock-parents = <&clk IMX8MN_CLK_24M>;
++                assigned-clock-rates = <24000000>;
++                csi_id = <0x00>;
++                powerdown-gpios = <&gpio1 7 GPIO_ACTIVE_HIGH>;
++                reset-gpios = <&gpio1 6 GPIO_ACTIVE_LOW>;
++                orientation = <2>;
++                mclk = <24000000>;
++                mclk_source = <0>;
++                mipi_csi;
++                status = "okay";
++
++                port {
++                        ar0144_to_mipi_csi2: endpoint {
++                                remote-endpoint = <&imx8mn_mipi_csi_in>;
++                                /* link-frequencies = /bits/ 64 <900000000>; */
++                                clock-lanes = <0>;
++                                data-lanes = <1 2>;
++                        };
++                };
++        };
++};
++
++
++&isi {
++	status = "okay";
++};
++
++&mipi_csi {
++	status = "okay";
++
++	ports {
++		port@0 {
++			imx8mn_mipi_csi_in: endpoint {
++				remote-endpoint = <&ar0144_to_mipi_csi2>;
++				data-lanes = <1 2>;
++			};
++		};
++	};
++};
+diff --git a/arch/arm64/boot/dts/freescale/imx8mn-ddr4-evk-poc.dts b/arch/arm64/boot/dts/freescale/imx8mn-ddr4-evk-poc.dts
+new file mode 100644
+index 000000000000..c9881ff9af45
+--- /dev/null
++++ b/arch/arm64/boot/dts/freescale/imx8mn-ddr4-evk-poc.dts
 @@ -0,0 +1,160 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
@@ -25,8 +106,8 @@ index 000000000000..421217ea1e6e
 +
 +/dts-v1/;
 +
-+#include "poc2.dtsi"
-+#include "poc1.dtsi"
++#include "imx8mn-poc.dtsi"
++#include "imx8mn-evk-poc.dtsi"
 +
 +/ {
 +	model = "NXP i.MX8MNano DDR4 EVK board";
@@ -178,11 +259,11 @@ index 000000000000..421217ea1e6e
 +		};
 +	};
 +};
-diff --git a/arch/arm64/boot/dts/freescale/poc1.dtsi b/arch/arm64/boot/dts/freescale/poc1.dtsi
+diff --git a/arch/arm64/boot/dts/freescale/imx8mn-evk-poc.dtsi b/arch/arm64/boot/dts/freescale/imx8mn-evk-poc.dtsi
 new file mode 100644
-index 000000000000..776fccea3d59
+index 000000000000..601ee0cb089f
 --- /dev/null
-+++ b/arch/arm64/boot/dts/freescale/poc1.dtsi
++++ b/arch/arm64/boot/dts/freescale/imx8mn-evk-poc.dtsi
 @@ -0,0 +1,690 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
@@ -190,7 +271,7 @@ index 000000000000..776fccea3d59
 + */
 +
 +#include <dt-bindings/usb/pd.h>
-+#include "poc2.dtsi"
++#include "imx8mn-poc.dtsi"
 +
 +/ {
 +	chosen {
@@ -446,7 +527,7 @@ index 000000000000..776fccea3d59
 +		#gpio-cells = <2>;
 +	};
 +
-+	ov5640_camera@3c {
++	camera@3c {
 +		compatible = "ovti,ov5640";
 +		reg = <0x3c>;
 +		pinctrl-names = "default";
@@ -458,7 +539,7 @@ index 000000000000..776fccea3d59
 +		assigned-clock-rates = <24000000>;
 +		powerdown-gpios = <&gpio1 7 GPIO_ACTIVE_HIGH>;
 +		reset-gpios = <&gpio1 6 GPIO_ACTIVE_LOW>;
-+		orientation = <2>;
++
 +		port {
 +			ov5640_to_mipi_csi2: endpoint {
 +				remote-endpoint = <&imx8mn_mipi_csi_in>;
@@ -874,11 +955,11 @@ index 000000000000..776fccea3d59
 +		>;
 +	};
 +};
-diff --git a/arch/arm64/boot/dts/freescale/poc2.dtsi b/arch/arm64/boot/dts/freescale/poc2.dtsi
+diff --git a/arch/arm64/boot/dts/freescale/imx8mn-poc.dtsi b/arch/arm64/boot/dts/freescale/imx8mn-poc.dtsi
 new file mode 100644
 index 000000000000..aa38dd6dc9ba
 --- /dev/null
-+++ b/arch/arm64/boot/dts/freescale/poc2.dtsi
++++ b/arch/arm64/boot/dts/freescale/imx8mn-poc.dtsi
 @@ -0,0 +1,1319 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
