@@ -4,7 +4,7 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "~/linux-6.1.55/include"
+                "~/linux-fslc_6.6/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/aarch64-linux-gnu-gcc",

@@ -11,6 +11,9 @@ SRC_URI:append = " file://patches/0007-added-ar0144-into-config.patch"
 # kernel configuration
 SRC_URI:append = " file://config/kernel-6-6.cfg"
 
+# remove the commit id from the kernel version
+SCMVERSION = "n"
+
 # unset KERNEL_DEVICETREE
 # KERNEL_DEVICETREE = " freescale/imx8mn-ddr4-evk.dtb "
 # KERNEL_DEVICETREE = " freescale/${KERNEL_DEVICETREE_BASENAME}.dtb "

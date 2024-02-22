@@ -865,7 +865,7 @@ index 000000000000..273d7d2e8f4b
 +		dev_err(dev, "could not initialise controls\n");
 +		goto free_entity;
 +	}
-+	
++
 +	ret = v4l2_async_register_subdev(&ar0144->sd);
 +	if (ret < 0) {
 +		dev_err(dev, "could not register v4l2 device\n");
