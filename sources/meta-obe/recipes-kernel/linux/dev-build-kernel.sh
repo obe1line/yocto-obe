@@ -4,11 +4,12 @@ patch=""
 build=""
 install=""
 
-while getopts c:p:b:i:x:z: flag
+while getopts p:d:c:b:i:x:z: flag
 do
     case "${flag}" in
-        c) config=${OPTARG};;
         p) patch=${OPTARG};;
+        d) dev=${OPTARG};;
+        c) config=${OPTARG};;
         b) build=${OPTARG};;
         i) install=${OPTARG};;
         x) clean=${OPTARG};;
@@ -32,6 +33,10 @@ if [ -n "$patch" ]; then
   git apply $FILES_PATH/patches/0007-added-ar0144-into-config.patch
 fi
 
+if [ -n "$dev" ]; then
+  cp $FILES_PATH/dev/ar0144.c $LINUX_SOURCE/drivers/media/i2c/
+fi
+
 if [ -n "$distclean" ]; then
   make distclean
 fi
@@ -48,13 +53,13 @@ fi
 
 if [ -n "$build" ]; then
   echo "# build"
-  make -j`nproc`
-  make modules
+  make -j`nproc` LOCALVERSION=-obe
+  make modules LOCALVERSION=-obe
 fi
 
 if [ -n "$install" ]; then
   echo "# install modules"
-  export INSTALL_MOD_PATH=~/linux-$LINUX_VERSION/lib-modules-output
+  export INSTALL_MOD_PATH=./lib-modules-output
   make modules_install
 fi
 

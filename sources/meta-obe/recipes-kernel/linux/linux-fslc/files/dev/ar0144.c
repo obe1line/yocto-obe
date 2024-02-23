@@ -22,9 +22,7 @@
 #define AR0144_ID_REG        0x3000
 #define AR0144_ID_VAL        0x1356
 
-struct ar0144_device {
-	struct device *dev;
-	struct i2c_client *client;
+struct ar0144_state {
 	struct v4l2_subdev sd;
 	struct media_pad pad;
 	struct mutex lock;
@@ -65,34 +63,32 @@ targets:
 
 */
 
-// Convert a v4l2_subdev to the parent ar0144_device
-static inline struct ar0144_device *to_ar0144_device(struct v4l2_subdev *sd)
+// Convert a v4l2_subdev to the parent ar0144_state
+static inline struct ar0144_state *to_ar0144_state(struct v4l2_subdev *sd)
 {
-	return container_of(sd, struct ar0144_device, sd);
-};
+	return container_of(sd, struct ar0144_state, sd);
+}
 
 static void ar0144_subdev_unregistered(struct v4l2_subdev *sd)
 {
-	struct ar0144_device *jd = to_ar0144_device(sd);
-	
+	struct i2c_client *client = v4l2_get_subdevdata(sd);
 	v4l2_async_unregister_subdev(sd);
-	dev_info(jd->dev, "Subdev unregistered\n");
-
+	dev_info(&client->dev, "Subdev unregistered\n");
 };
 
 static int ar0144_subdev_registered(struct v4l2_subdev *sd)
 {
 	int ret = 0;
-	struct ar0144_device *jd = to_ar0144_device(sd);
+	struct i2c_client *client = v4l2_get_subdevdata(sd);
 
 	// register as a sub-device
 	ret = v4l2_device_register_subdev(sd->v4l2_dev, sd);
 	if (ret <0) {
-		dev_info(jd->dev, "Unable to register subdev: %#010X\n", ret);
+		dev_info(&client->dev, "Unable to register subdev: %#010X\n", ret);
 		return ret;
 	}
 
-	dev_info(jd->dev, "Subdev registered\n");
+	dev_info(&client->dev, "Subdev registered\n");
     return 0;
 };
 
@@ -111,9 +107,9 @@ static int ar0144_subdev_link_setup(struct media_entity *entity, const struct me
 {
 	int ret = 0;
 	struct v4l2_subdev *sd = media_entity_to_v4l2_subdev(entity);
-	// struct ar0144_device *jd = to_ar0144_device(sd);
+	struct i2c_client *client = v4l2_get_subdevdata(sd);
 	
-	dev_info(sd->dev, "TODO: link setup\n");
+	dev_info(&client->dev, "TODO: link setup\n");
 	return ret;
 };
 
@@ -156,38 +152,36 @@ It then registers the device with the V4L2 and media frameworks, and sets up the
 */
 static int ar0144_probe(struct i2c_client *client)
 {
-	struct device *dev = &client->dev;
-	struct ar0144_device *devm;
-	struct v4l2_subdev *sd = &devm->sd;
+	struct ar0144_state *state;
 	int ret = 0;
 
-	devm = devm_kzalloc(dev, sizeof(*devm), GFP_KERNEL);
-	if (!devm) {
+	state = devm_kzalloc(&client->dev, sizeof(*state), GFP_KERNEL);
+	if (!state) {
 		return -ENOMEM;
 	}
 
 	/* Initialise the V4L2 structure and set the flags for a subdevice sensor */
-	v4l2_i2c_subdev_init(sd, client, &ar0144_subdev_ops);
-	sd->flags |= V4L2_SUBDEV_FL_HAS_DEVNODE | V4L2_SUBDEV_FL_HAS_EVENTS;
-	sd->internal_ops = &ar0144_subdev_internal_ops;
-	sd->entity.function = MEDIA_ENT_F_CAM_SENSOR;
-	sd->entity.ops = &ar0144_media_ops;
-	sd->entity.obj_type = MEDIA_ENTITY_TYPE_V4L2_SUBDEV;
-	sd->entity.name = DRIVER_NAME;
+	v4l2_i2c_subdev_init(&state->sd, client, &ar0144_subdev_ops);
+	state->sd.flags |= V4L2_SUBDEV_FL_HAS_DEVNODE | V4L2_SUBDEV_FL_HAS_EVENTS;
+	state->sd.internal_ops = &ar0144_subdev_internal_ops;
+	state->sd.entity.function = MEDIA_ENT_F_CAM_SENSOR;
+	state->sd.entity.ops = &ar0144_media_ops;
+	state->sd.entity.obj_type = MEDIA_ENTITY_TYPE_V4L2_SUBDEV;
+	state->sd.entity.name = DRIVER_NAME;
 
-	mutex_init(&devm->lock);
+	mutex_init(&state->lock);
 
-	ret = v4l2_async_register_subdev(sd);
+	ret = v4l2_async_register_subdev(&state->sd);
 	if (ret < 0) {
-		dev_err(dev, "Probe unable to resister async: %#010X\n", ret);
+		dev_err(&client->dev, "Probe unable to resister async: %#010X\n", ret);
 		goto error;
 	}
 
-	dev_info(dev, "Probe successful\n");
+	dev_info(&client->dev, "Probe successful\n");
 	return ret;
 
 error:
-	mutex_destroy(&devm->lock);
+	mutex_destroy(&state->lock);
 
 	return ret;
 }
@@ -197,6 +191,8 @@ Remove the driver and clean up.
 */
 static void ar0144_remove(struct i2c_client *client)
 {
+	struct v4l2_subdev *sd = i2c_get_clientdata(client);
+	v4l2_device_unregister_subdev(sd);
 	dev_info(&client->dev, "Removed %s driver\n", DRIVER_NAME);
 }
 

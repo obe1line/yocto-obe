@@ -14,6 +14,9 @@ SRC_URI:append = " file://config/kernel-6-6.cfg"
 
 # remove the commit id from the kernel version
 SCMVERSION = "n"
+# remove suffix from kernel version
+LOCALVERSION = "-obe"
+LINUX_VERSION_EXTENSION = "-obe"
 
 # prevent the camera drivers auto-loading as they conflict during development
 KERNEL_MODULE_AUTOLOAD:remove = "ov5640"
