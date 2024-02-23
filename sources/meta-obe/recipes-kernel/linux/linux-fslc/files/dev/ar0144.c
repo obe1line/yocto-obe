@@ -35,6 +35,7 @@
 
 /* timing for the sensor */
 struct timing {
+	// output pixel_clock (max) is 74.25MHz as a default, 1280 x 800. 6-48MHz input clock.
 	__u32 hblank;
 	__u32 vblank;
 };
@@ -208,6 +209,13 @@ static int ar0144_enum_mbus_code(struct v4l2_subdev *sd, struct v4l2_subdev_stat
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
 	dev_info(&client->dev, "Enum mbus code\n");
+
+	/* for now, only support 1 format at index 0 */
+	if (code->index != 0) {
+	    return -EINVAL;
+	}
+
+    code->code = MEDIA_BUS_FMT_SBGGR12_1X12;
 	return 0;
 };
 
