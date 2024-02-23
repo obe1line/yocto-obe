@@ -23,27 +23,43 @@
 #define AR0144_ID_REG        0x3000
 #define AR0144_ID_VAL        0x1356
 
+#define AR0144_NUM_CTRLS	5
 #define STEP_VALUE_1	1
 
 #define AR0144_MIN_HBLANK 0
 #define AR0144_MAX_HBLANK 65536
 #define AR0144_MIN_VBLANK 0
 #define AR0144_MAX_VBLANK 65536
+#define AR0144_MIN_PIXEL_RATE 74250000
+#define AR0144_MAX_PIXEL_RATE 74250000
+#define AR0144_MIN_EXPOSURE 0
+#define AR0144_MAX_EXPOSURE 65536
+#define AR0144_MIN_ANALOG_GAIN 0
+#define AR0144_MAX_ANALOG_GAIN 65536
 
+#define AR0144_PIXEL_RATE				74250000
 #define AR0144_1280_800_HBLANK_VALUE	208
 #define AR0144_1280_800_VBLANK_VALUE	27
+#define AR0144_1280_800_EXPOSURE_VALUE	100
+#define AR0144_1280_800_ANALOG_GAIN_VALUE	100
 
 /* timing for the sensor */
 struct timing {
 	// output pixel_clock (max) is 74.25MHz as a default, 1280 x 800. 6-48MHz input clock.
+	__u32 pixel_rate;
 	__u32 hblank;
 	__u32 vblank;
+	__u32 exposure;
+	__u32 analog_gain;
 };
 
 struct ar0144_ctrls {
 	struct v4l2_ctrl_handler handler;
+	struct v4l2_ctrl *pixel_rate;
 	struct v4l2_ctrl *hblank;
 	struct v4l2_ctrl *vblank;
+	struct v4l2_ctrl *exposure;
+	struct v4l2_ctrl *analog_gain;
 };
 
 
@@ -358,8 +374,11 @@ static const struct v4l2_ctrl_ops ar0144_ctrl_ops = {
 static int ar0144_init_timings(struct ar0144_state *state)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(&state->sd);
+	state->timings.pixel_rate = AR0144_PIXEL_RATE;
 	state->timings.hblank = AR0144_1280_800_HBLANK_VALUE;
 	state->timings.vblank = AR0144_1280_800_VBLANK_VALUE;
+	state->timings.exposure = AR0144_1280_800_EXPOSURE_VALUE;
+	state->timings.analog_gain = AR0144_1280_800_ANALOG_GAIN_VALUE;
 	dev_info(&client->dev, "Initialised %s timings\n", DRIVER_NAME);
 	return 0;
 }
@@ -372,8 +391,8 @@ static int ar0144_init_controls(struct ar0144_state *state)
 	struct i2c_client *client = v4l2_get_subdevdata(&state->sd);
 	int ret = 0;
 
-	// initialise the control handler for 2 controls
-	v4l2_ctrl_handler_init(ctrl_handler, 2);
+	// initialise the control handler for all controls
+	v4l2_ctrl_handler_init(ctrl_handler, AR0144_NUM_CTRLS);
 	if (ctrl_handler->error) {
 		dev_err(&client->dev, "v4l2_ctrl_handler_init %s failed: %#010X\n", DRIVER_NAME, ctrl_handler->error);
 		return ctrl_handler->error;
@@ -395,8 +414,35 @@ static int ar0144_init_controls(struct ar0144_state *state)
 		goto ctrl_error;
 	}
 
+	/* pixel rate */
+	ctrls->pixel_rate = v4l2_ctrl_new_std(ctrl_handler, ops, V4L2_CID_PIXEL_RATE, 
+						AR0144_MIN_PIXEL_RATE, AR0144_MAX_PIXEL_RATE, STEP_VALUE_1, state->timings.pixel_rate);
+	if (ctrl_handler->error) {
+		dev_err(&client->dev, "pixel_rate v4l2_ctrl_new_std %s failed: %#010X\n", DRIVER_NAME, ctrl_handler->error);
+		goto ctrl_error;
+	}
+
+	/* exposure */
+	ctrls->exposure = v4l2_ctrl_new_std(ctrl_handler, ops, V4L2_CID_EXPOSURE, 
+						AR0144_MIN_EXPOSURE, AR0144_MAX_EXPOSURE, STEP_VALUE_1, state->timings.exposure);
+	if (ctrl_handler->error) {
+		dev_err(&client->dev, "exposure v4l2_ctrl_new_std %s failed: %#010X\n", DRIVER_NAME, ctrl_handler->error);
+		goto ctrl_error;
+	}
+	
+	/* analog gain */
+	ctrls->analog_gain = v4l2_ctrl_new_std(ctrl_handler, ops, V4L2_CID_ANALOGUE_GAIN, 
+						AR0144_MIN_ANALOG_GAIN, AR0144_MAX_ANALOG_GAIN, STEP_VALUE_1, state->timings.analog_gain);
+	if (ctrl_handler->error) {
+		dev_err(&client->dev, "analog_gain v4l2_ctrl_new_std %s failed: %#010X\n", DRIVER_NAME, ctrl_handler->error);
+		goto ctrl_error;
+	}
+
 	ctrls->hblank->flags |= V4L2_CTRL_FLAG_READ_ONLY;
 	ctrls->vblank->flags |= V4L2_CTRL_FLAG_READ_ONLY;
+	ctrls->pixel_rate->flags |= V4L2_CTRL_FLAG_READ_ONLY;
+	ctrls->exposure->flags |= V4L2_CTRL_FLAG_READ_ONLY;
+	ctrls->analog_gain->flags |= V4L2_CTRL_FLAG_READ_ONLY;
 
 	state->sd.ctrl_handler = ctrl_handler;
 
