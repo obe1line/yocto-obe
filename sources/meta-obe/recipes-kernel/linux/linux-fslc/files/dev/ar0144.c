@@ -244,6 +244,16 @@ static int ar0144_enum_frame_size(struct v4l2_subdev *sd, struct v4l2_subdev_sta
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
 	dev_info(&client->dev, "Enum frame size\n");
+
+	switch (fse->index) {
+    case 0:
+        fse->min_width = 1280;
+        fse->min_height = 800;
+        break;
+    default:
+        return -EINVAL;
+    }
+
 	return 0;
 };
 
@@ -251,6 +261,16 @@ static int ar0144_enum_frame_interval(struct v4l2_subdev *sd, struct v4l2_subdev
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
 	dev_info(&client->dev, "Enum frame interval\n");
+
+	switch (fie->index) {
+	case 0:
+		fie->interval.numerator = 1;
+		fie->interval.denominator = 60;
+		break;
+	default:
+		return -EINVAL;
+	}
+
 	return 0;
 };
 
