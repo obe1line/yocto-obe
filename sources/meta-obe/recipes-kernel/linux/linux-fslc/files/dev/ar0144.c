@@ -15,6 +15,7 @@
 #include <media/v4l2-device.h>
 #include <media/v4l2-ioctl.h>
 #include <media/v4l2-subdev.h>
+#include <media/v4l2-ctrls.h>
 
 #define DRIVER_NAME "ar0144"
 
@@ -22,10 +23,35 @@
 #define AR0144_ID_REG        0x3000
 #define AR0144_ID_VAL        0x1356
 
+#define STEP_VALUE_1	1
+
+#define AR0144_MIN_HBLANK 0
+#define AR0144_MAX_HBLANK 65536
+#define AR0144_MIN_VBLANK 0
+#define AR0144_MAX_VBLANK 65536
+
+#define AR0144_1280_800_HBLANK_VALUE	208
+#define AR0144_1280_800_VBLANK_VALUE	27
+
+/* timing for the sensor */
+struct timing {
+	__u32 hblank;
+	__u32 vblank;
+};
+
+struct ar0144_ctrls {
+	struct v4l2_ctrl_handler handler;
+	struct v4l2_ctrl *hblank;
+	struct v4l2_ctrl *vblank;
+};
+
+
 struct ar0144_state {
 	struct v4l2_subdev sd;
 	struct media_pad pad;
 	struct mutex lock;
+	struct ar0144_ctrls ctrls;
+	struct timing timings;
 };
 
 /*
@@ -66,41 +92,174 @@ targets:
 // Convert a v4l2_subdev to the parent ar0144_state
 static inline struct ar0144_state *to_ar0144_state(struct v4l2_subdev *sd)
 {
+	/* return a pointer to the state structure where sd is state->sd */
 	return container_of(sd, struct ar0144_state, sd);
+}
+
+// Convert a v4l2_subdev to the parent ar0144_state
+static inline struct ar0144_state *ar0144_ctrls_to_ar0144_state(struct ar0144_ctrls *ctrls)
+{
+	/* return a pointer to the state structure where ctrl is state->ctrls */
+	return container_of(ctrls, struct ar0144_state, ctrls);
+}
+
+static inline struct ar0144_ctrls *ctrl_handler_to_ar0144_ctrls(struct v4l2_ctrl_handler *handler)
+{
+	/* return a pointer to the state structure where ctrl is ar0144_ctrls->handler */
+	return container_of(handler, struct ar0144_ctrls, handler);
 }
 
 static void ar0144_subdev_unregistered(struct v4l2_subdev *sd)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
-	v4l2_async_unregister_subdev(sd);
-	dev_info(&client->dev, "Subdev unregistered\n");
+	dev_info(&client->dev, "Subdev %s unregistered\n", DRIVER_NAME);
 };
 
 static int ar0144_subdev_registered(struct v4l2_subdev *sd)
 {
-	int ret = 0;
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
-
-	// register as a sub-device
-	ret = v4l2_device_register_subdev(sd->v4l2_dev, sd);
-	if (ret <0) {
-		dev_info(&client->dev, "Unable to register subdev: %#010X\n", ret);
-		return ret;
-	}
-
-	dev_info(&client->dev, "Subdev registered\n");
+	dev_info(&client->dev, "Subdev %s registered\n", DRIVER_NAME);
     return 0;
+};
+
+static int ar0144_subdev_open(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
+{
+	struct i2c_client *client = v4l2_get_subdevdata(sd);
+	dev_info(&client->dev, "Subdev %s open\n", DRIVER_NAME);
+	return 0;
+};
+
+static int ar0144_subdev_close(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
+{
+	struct i2c_client *client = v4l2_get_subdevdata(sd);
+	dev_info(&client->dev, "Subdev %s close\n", DRIVER_NAME);
+	return 0;
 };
 
 static const struct v4l2_subdev_internal_ops ar0144_subdev_internal_ops = {
     .registered = ar0144_subdev_registered,
 	.unregistered = ar0144_subdev_unregistered,
+	.open = ar0144_subdev_open,
+	.close = ar0144_subdev_close,
+};
+
+static int ar0144_ctrl_subdev_log_status(struct v4l2_subdev *sd)
+{
+	struct i2c_client *client = v4l2_get_subdevdata(sd);
+	dev_info(&client->dev, "Subdev %s log status\n", DRIVER_NAME);
+	return 0;
+};
+
+static int ar0144_ctrl_subdev_subscribe_event(struct v4l2_subdev *sd, struct v4l2_fh *fh, struct v4l2_event_subscription *sub)
+{
+	struct i2c_client *client = v4l2_get_subdevdata(sd);
+	dev_info(&client->dev, "Subdev %s subscribe event\n", DRIVER_NAME);
+	return 0;
+};
+
+static int ar0144_event_subdev_unsubscribe(struct v4l2_subdev *sd, struct v4l2_fh *fh, struct v4l2_event_subscription *sub)
+{
+	struct i2c_client *client = v4l2_get_subdevdata(sd);
+	dev_info(&client->dev, "Subdev %s unsubscribe event\n", DRIVER_NAME);
+	return 0;
+};
+
+static const struct v4l2_subdev_core_ops ar0144_core_ops = {
+	.log_status = ar0144_ctrl_subdev_log_status,
+	.subscribe_event = ar0144_ctrl_subdev_subscribe_event,
+	.unsubscribe_event = ar0144_event_subdev_unsubscribe,
+};
+
+static int ar0144_g_frame_interval(struct v4l2_subdev *sd, struct v4l2_subdev_frame_interval *fi)
+{
+	struct i2c_client *client = v4l2_get_subdevdata(sd);
+	dev_info(&client->dev, "%s Get frame interval\n", DRIVER_NAME);
+	return 0;
+};
+
+static int ar0144_s_frame_interval(struct v4l2_subdev *sd, struct v4l2_subdev_frame_interval *fi)
+{
+	struct i2c_client *client = v4l2_get_subdevdata(sd);
+	dev_info(&client->dev, "%s Set frame interval\n", DRIVER_NAME);
+	return 0;
+};
+
+static int ar0144_s_stream(struct v4l2_subdev *sd, int enable)
+{
+	struct i2c_client *client = v4l2_get_subdevdata(sd);
+	dev_info(&client->dev, "%s Set stream\n", DRIVER_NAME);
+	return 0;
+};
+
+static const struct v4l2_subdev_video_ops ar0144_video_ops = {
+	.g_frame_interval = ar0144_g_frame_interval,
+	.s_frame_interval = ar0144_s_frame_interval,
+	.s_stream = ar0144_s_stream,
+};
+
+static int ar0144_init_cfg(struct v4l2_subdev *sd, struct v4l2_subdev_state *state)
+{
+	struct i2c_client *client = v4l2_get_subdevdata(sd);
+	dev_info(&client->dev, "Init cfg\n");
+	return 0;
+};
+
+static int ar0144_enum_mbus_code(struct v4l2_subdev *sd, struct v4l2_subdev_state *state, struct v4l2_subdev_mbus_code_enum *code)
+{
+	struct i2c_client *client = v4l2_get_subdevdata(sd);
+	dev_info(&client->dev, "Enum mbus code\n");
+	return 0;
+};
+
+static int ar0144_get_fmt(struct v4l2_subdev *sd, struct v4l2_subdev_state *state, struct v4l2_subdev_format *format)
+{
+	struct i2c_client *client = v4l2_get_subdevdata(sd);
+	dev_info(&client->dev, "Get format\n");
+	return 0;
+};
+
+static int ar0144_set_fmt(struct v4l2_subdev *sd, struct v4l2_subdev_state *state, struct v4l2_subdev_format *format)
+{
+	struct i2c_client *client = v4l2_get_subdevdata(sd);
+	dev_info(&client->dev, "Set format\n");
+	return 0;
+};
+
+static int ar0144_get_selection(struct v4l2_subdev *sd, struct v4l2_subdev_state *state, struct v4l2_subdev_selection *sel)
+{
+	struct i2c_client *client = v4l2_get_subdevdata(sd);
+	dev_info(&client->dev, "Get selection\n");
+	return 0;
+};
+
+static int ar0144_enum_frame_size(struct v4l2_subdev *sd, struct v4l2_subdev_state *state, struct v4l2_subdev_frame_size_enum *fse)
+{
+	struct i2c_client *client = v4l2_get_subdevdata(sd);
+	dev_info(&client->dev, "Enum frame size\n");
+	return 0;
+};
+
+static int ar0144_enum_frame_interval(struct v4l2_subdev *sd, struct v4l2_subdev_state *state, struct v4l2_subdev_frame_interval_enum *fie)
+{
+	struct i2c_client *client = v4l2_get_subdevdata(sd);
+	dev_info(&client->dev, "Enum frame interval\n");
+	return 0;
+};
+
+static const struct v4l2_subdev_pad_ops ar0144_pad_ops = {
+	.init_cfg = ar0144_init_cfg,
+	.enum_mbus_code = ar0144_enum_mbus_code,
+	.get_fmt = ar0144_get_fmt,
+	.set_fmt = ar0144_set_fmt,
+	.get_selection = ar0144_get_selection,
+	.enum_frame_size = ar0144_enum_frame_size,
+	.enum_frame_interval = ar0144_enum_frame_interval,
 };
 
 static const struct v4l2_subdev_ops ar0144_subdev_ops = {
-	// .core = &ar0144_core_ops,
-	// .video = &ar0144_video_ops,
-	// .pad = &ar0144_pad_ops,
+	.core = &ar0144_core_ops,
+	.video = &ar0144_video_ops,
+	.pad = &ar0144_pad_ops,
 };
 
 static int ar0144_subdev_link_setup(struct media_entity *entity, const struct media_pad *local, const struct media_pad *remote, u32 flags)
@@ -145,6 +304,82 @@ static struct i2c_driver ar0144_i2c_driver = {
 	.remove         = ar0144_remove,
 };
 
+static int ar0144_g_volatile_ctrl(struct v4l2_ctrl *ctrl)
+{
+	struct ar0144_ctrls *ctrls = ctrl_handler_to_ar0144_ctrls(ctrl->handler);
+	struct ar0144_state *state = ar0144_ctrls_to_ar0144_state(ctrls);
+	struct i2c_client *client = v4l2_get_subdevdata(&state->sd);
+	dev_info(&client->dev, "Get volatile control\n");
+	return 0;
+}
+
+static int ar0144_s_ctrl(struct v4l2_ctrl *ctrl)
+{
+	struct ar0144_ctrls *ctrls = ctrl_handler_to_ar0144_ctrls(ctrl->handler);
+	struct ar0144_state *state = ar0144_ctrls_to_ar0144_state(ctrls);
+	struct i2c_client *client = v4l2_get_subdevdata(&state->sd);
+	dev_info(&client->dev, "Set control\n");
+	return 0;
+}
+
+static const struct v4l2_ctrl_ops ar0144_ctrl_ops = {
+	.g_volatile_ctrl = ar0144_g_volatile_ctrl,
+	.s_ctrl = ar0144_s_ctrl,
+};
+
+static int ar0144_init_timings(struct ar0144_state *state)
+{
+	struct i2c_client *client = v4l2_get_subdevdata(&state->sd);
+	state->timings.hblank = AR0144_1280_800_HBLANK_VALUE;
+	state->timings.vblank = AR0144_1280_800_VBLANK_VALUE;
+	dev_info(&client->dev, "Initialised %s timings\n", DRIVER_NAME);
+	return 0;
+}
+
+static int ar0144_init_controls(struct ar0144_state *state)
+{
+	const struct v4l2_ctrl_ops *ops = &ar0144_ctrl_ops;
+	struct ar0144_ctrls *ctrls = &state->ctrls;
+	struct v4l2_ctrl_handler *ctrl_handler = &ctrls->handler;
+	struct i2c_client *client = v4l2_get_subdevdata(&state->sd);
+	int ret = 0;
+
+	// initialise the control handler for 2 controls
+	v4l2_ctrl_handler_init(ctrl_handler, 2);
+	if (ctrl_handler->error) {
+		dev_err(&client->dev, "v4l2_ctrl_handler_init %s failed: %#010X\n", DRIVER_NAME, ctrl_handler->error);
+		return ctrl_handler->error;
+	}
+
+	/* hblank */
+	ctrls->hblank = v4l2_ctrl_new_std(ctrl_handler, ops, V4L2_CID_HBLANK, 
+						AR0144_MIN_HBLANK, AR0144_MAX_HBLANK, STEP_VALUE_1, state->timings.hblank);
+	if (ctrl_handler->error) {
+		dev_err(&client->dev, "hblank v4l2_ctrl_new_std %s failed: %#010X\n", DRIVER_NAME, ctrl_handler->error);
+		goto ctrl_error;
+	}
+
+	/* vblank */
+	ctrls->vblank = v4l2_ctrl_new_std(ctrl_handler, ops, V4L2_CID_VBLANK, 
+						AR0144_MIN_VBLANK, AR0144_MAX_VBLANK, STEP_VALUE_1, state->timings.vblank);
+	if (ctrl_handler->error) {
+		dev_err(&client->dev, "vblank v4l2_ctrl_new_std %s failed: %#010X\n", DRIVER_NAME, ctrl_handler->error);
+		goto ctrl_error;
+	}
+
+	ctrls->hblank->flags |= V4L2_CTRL_FLAG_READ_ONLY;
+	ctrls->vblank->flags |= V4L2_CTRL_FLAG_READ_ONLY;
+
+	state->sd.ctrl_handler = ctrl_handler;
+
+	return ret;
+
+ctrl_error:
+	ret = ctrl_handler->error;
+	v4l2_ctrl_handler_free(ctrl_handler);
+	return ret;
+}
+
 /*
 Probe is called when the kernel matches a device tree node with the driver compatibile names.
 After allocating memory for the device, the function checks the device ID to ensure it is the correct device.
@@ -171,18 +406,38 @@ static int ar0144_probe(struct i2c_client *client)
 
 	mutex_init(&state->lock);
 
-	ret = v4l2_async_register_subdev(&state->sd);
-	if (ret < 0) {
-		dev_err(&client->dev, "Probe unable to resister async: %#010X\n", ret);
-		goto error;
+	dev_info(&client->dev, "Initialised %s state\n", DRIVER_NAME);
+
+	state->pad.flags = MEDIA_PAD_FL_SOURCE;
+	ret = media_entity_pads_init(&state->sd.entity, 1, &state->pad);
+	if (ret) {
+		dev_err(&client->dev, "Probe %s unable to init media pads: %#010X\n", DRIVER_NAME, ret);
+		goto exit_probe;
 	}
 
-	dev_info(&client->dev, "Probe successful\n");
+	ret = ar0144_init_timings(state);
+	if (ret < 0) {
+		dev_err(&client->dev, "Probe %s unable to init timings: %#010X\n", DRIVER_NAME, ret);
+		goto exit_probe;
+	}
+
+	ret = ar0144_init_controls(state);
+	if (ret < 0) {
+		dev_err(&client->dev, "Probe %s unable to init controls: %#010X\n", DRIVER_NAME, ret);
+		goto exit_probe;
+	}
+
+	ret = v4l2_async_register_subdev_sensor(&state->sd);
+	if (ret < 0) {
+		dev_err(&client->dev, "Probe %s unable to resister async: %#010X\n", DRIVER_NAME, ret);
+		goto exit_probe;
+	}
+
+	dev_info(&client->dev, "Probe %s successful\n", DRIVER_NAME);
 	return ret;
 
-error:
-	mutex_destroy(&state->lock);
-
+exit_probe:
+	// TODO: free resources as required
 	return ret;
 }
 
@@ -192,7 +447,9 @@ Remove the driver and clean up.
 static void ar0144_remove(struct i2c_client *client)
 {
 	struct v4l2_subdev *sd = i2c_get_clientdata(client);
-	v4l2_device_unregister_subdev(sd);
+	struct ar0144_state *state = to_ar0144_state(sd);
+	v4l2_async_unregister_subdev(sd);
+	mutex_destroy(&state->lock);
 	dev_info(&client->dev, "Removed %s driver\n", DRIVER_NAME);
 }
 
