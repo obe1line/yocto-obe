@@ -23,9 +23,6 @@
 #define AR0144_ID_REG        0x3000
 #define AR0144_ID_VAL        0x1356
 
-#define AR0144_NUM_CTRLS	5
-#define STEP_VALUE_1	1
-
 #define AR0144_MIN_HBLANK 0
 #define AR0144_MAX_HBLANK 65536
 #define AR0144_MIN_VBLANK 0
@@ -33,15 +30,15 @@
 #define AR0144_MIN_PIXEL_RATE 74250000
 #define AR0144_MAX_PIXEL_RATE 74250000
 #define AR0144_MIN_EXPOSURE 0
-#define AR0144_MAX_EXPOSURE 65536
+#define AR0144_MAX_EXPOSURE 1023
 #define AR0144_MIN_ANALOG_GAIN 0
-#define AR0144_MAX_ANALOG_GAIN 65536
+#define AR0144_MAX_ANALOG_GAIN 1023
 
 #define AR0144_PIXEL_RATE				74250000
 #define AR0144_1280_800_HBLANK_VALUE	208
 #define AR0144_1280_800_VBLANK_VALUE	27
 #define AR0144_1280_800_EXPOSURE_VALUE	100
-#define AR0144_1280_800_ANALOG_GAIN_VALUE	100
+#define AR0144_1280_800_ANALOG_GAIN_VALUE	0
 
 /* timing for the sensor */
 struct timing {
@@ -60,6 +57,7 @@ struct ar0144_ctrls {
 	struct v4l2_ctrl *vblank;
 	struct v4l2_ctrl *exposure;
 	struct v4l2_ctrl *analog_gain;
+	struct v4l2_ctrl *orientation;
 };
 
 
@@ -235,17 +233,36 @@ static int ar0144_enum_mbus_code(struct v4l2_subdev *sd, struct v4l2_subdev_stat
 	return 0;
 };
 
-static int ar0144_get_fmt(struct v4l2_subdev *sd, struct v4l2_subdev_state *state, struct v4l2_subdev_format *format)
+static struct v4l2_mbus_framefmt ar0144_format = {
+	.width = 1280,
+	.height = 800,
+	.code = MEDIA_BUS_FMT_SBGGR12_1X12,
+	.field = V4L2_FIELD_NONE,
+	.colorspace = V4L2_COLORSPACE_SRGB,
+};
+
+static int ar0144_get_fmt(struct v4l2_subdev *sd, struct v4l2_subdev_state *state, struct v4l2_subdev_format *fmt)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
+	struct ar0144_state *ar_state = to_ar0144_state(sd);
+	const struct v4l2_mbus_framefmt *format;
+
 	dev_info(&client->dev, "Get format\n");
+
+	// hardcode for now 
+	format = &ar0144_format;
+
+	mutex_lock(&ar_state->lock);
+	fmt->format = *format;
+	mutex_unlock(&ar_state->lock);
 	return 0;
 };
 
-static int ar0144_set_fmt(struct v4l2_subdev *sd, struct v4l2_subdev_state *state, struct v4l2_subdev_format *format)
+static int ar0144_set_fmt(struct v4l2_subdev *sd, struct v4l2_subdev_state *state, struct v4l2_subdev_format *fmt)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
 	dev_info(&client->dev, "Set format\n");
+	// do nothing for now
 	return 0;
 };
 
@@ -253,6 +270,23 @@ static int ar0144_get_selection(struct v4l2_subdev *sd, struct v4l2_subdev_state
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
 	dev_info(&client->dev, "Get selection\n");
+
+	switch (sel->target) {
+	case V4L2_SEL_TGT_NATIVE_SIZE:
+	case V4L2_SEL_TGT_CROP_BOUNDS:
+	case V4L2_SEL_TGT_CROP_DEFAULT:
+	case V4L2_SEL_TGT_CROP:
+		sel->r.left = 0;
+		sel->r.top = 0;
+		sel->r.width = 1280;
+		sel->r.height = 800;
+		dev_info(&client->dev, "Get selection hardcoded to 1080, 800\n");
+		break;
+
+	default:
+		return -EINVAL;
+	}
+
 	return 0;
 };
 
@@ -391,6 +425,9 @@ static int ar0144_init_controls(struct ar0144_state *state)
 	struct i2c_client *client = v4l2_get_subdevdata(&state->sd);
 	int ret = 0;
 
+	#define AR0144_NUM_CTRLS	6
+	#define STEP_VALUE_1	1
+
 	// initialise the control handler for all controls
 	v4l2_ctrl_handler_init(ctrl_handler, AR0144_NUM_CTRLS);
 	if (ctrl_handler->error) {
@@ -438,12 +475,20 @@ static int ar0144_init_controls(struct ar0144_state *state)
 		goto ctrl_error;
 	}
 
+	/* orientation is front user facing */
+	ctrls->orientation = v4l2_ctrl_new_std(ctrl_handler, ops, V4L2_CID_CAMERA_ORIENTATION, 
+						0, 2, STEP_VALUE_1, V4L2_CAMERA_ORIENTATION_FRONT);
+	if (ctrl_handler->error) {
+		dev_err(&client->dev, "orientation v4l2_ctrl_new_std %s failed: %#010X\n", DRIVER_NAME, ctrl_handler->error);
+		goto ctrl_error;
+	}
+
 	ctrls->hblank->flags |= V4L2_CTRL_FLAG_READ_ONLY;
 	ctrls->vblank->flags |= V4L2_CTRL_FLAG_READ_ONLY;
 	ctrls->pixel_rate->flags |= V4L2_CTRL_FLAG_READ_ONLY;
 	ctrls->exposure->flags |= V4L2_CTRL_FLAG_READ_ONLY;
 	ctrls->analog_gain->flags |= V4L2_CTRL_FLAG_READ_ONLY;
-
+	ctrls->orientation->flags |= V4L2_CTRL_FLAG_READ_ONLY;
 	state->sd.ctrl_handler = ctrl_handler;
 
 	return ret;

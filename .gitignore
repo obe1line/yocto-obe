@@ -10,6 +10,7 @@ build/sstate-cache/
 build/tmp*
 build/workspace
 
+.vscode-ctags
 
 # sources
 sources/bitbake
