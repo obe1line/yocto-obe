@@ -7,6 +7,9 @@
  *
  */
 
+// TODO: remove this when the driver is complete
+#define DEBUG 1
+
 #include <linux/types.h>
 #include <linux/i2c.h>
 #include <linux/kernel.h>
@@ -16,6 +19,7 @@
 #include <media/v4l2-ioctl.h>
 #include <media/v4l2-subdev.h>
 #include <media/v4l2-ctrls.h>
+#include <media/v4l2-fwnode.h>
 
 #define DRIVER_NAME "ar0144"
 
@@ -67,19 +71,11 @@ struct ar0144_state {
 	struct mutex lock;
 	struct ar0144_ctrls ctrls;
 	struct timing timings;
+	struct v4l2_mbus_framefmt fmt;
 };
 
 /*
 libcamera support:
-Mandatory Requirements
-----------------------
-
-.. _V4L2_CID_ANALOGUE_GAIN: https://www.kernel.org/doc/html/latest/userspace-api/media/v4l/ext-ctrls-image-source.html
-.. _V4L2_CID_EXPOSURE: https://www.kernel.org/doc/html/latest/userspace-api/media/v4l/control.html
-.. _V4L2_CID_HBLANK: https://www.kernel.org/doc/html/latest/userspace-api/media/v4l/ext-ctrls-image-source.html
-.. _V4L2_CID_PIXEL_RATE: https://www.kernel.org/doc/html/latest/userspace-api/media/v4l/ext-ctrls-image-process.html
-.. _V4L2_CID_VBLANK: https://www.kernel.org/doc/html/latest/userspace-api/media/v4l/ext-ctrls-image-source.html
-
 Optional Requirements
 ---------------------
 .. _V4L2_CID_CAMERA_ORIENTATION: https://www.kernel.org/doc/html/latest/userspace-api/media/v4l/ext-ctrls-camera.html
@@ -219,6 +215,25 @@ static int ar0144_init_cfg(struct v4l2_subdev *sd, struct v4l2_subdev_state *sta
 	return 0;
 };
 
+#define AR0144_WIDTH_MIN 	8u
+#define AR0144_WIDTH_MAX	1292u
+#define AR0144_HEIGHT_MIN	8u
+#define AR0144_HEIGHT_MAX	812u
+
+static struct v4l2_mbus_framefmt ar0144_format;
+
+static void ar0144_adj_fmt(struct v4l2_mbus_framefmt *fmt)
+{
+	fmt->width = clamp(ALIGN(fmt->width, 4), AR0144_WIDTH_MIN, AR0144_WIDTH_MAX);
+	fmt->height = clamp(ALIGN(fmt->height, 4), AR0144_HEIGHT_MIN, AR0144_HEIGHT_MAX);
+	fmt->code = MEDIA_BUS_FMT_SRGGB12_1X12;
+	fmt->field = V4L2_FIELD_NONE;
+	fmt->colorspace = V4L2_COLORSPACE_SRGB;
+	fmt->ycbcr_enc = V4L2_YCBCR_ENC_DEFAULT;
+	fmt->quantization = V4L2_QUANTIZATION_FULL_RANGE;
+	fmt->xfer_func = V4L2_XFER_FUNC_DEFAULT;
+}
+
 static int ar0144_enum_mbus_code(struct v4l2_subdev *sd, struct v4l2_subdev_state *state, struct v4l2_subdev_mbus_code_enum *code)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
@@ -229,58 +244,72 @@ static int ar0144_enum_mbus_code(struct v4l2_subdev *sd, struct v4l2_subdev_stat
 	    return -EINVAL;
 	}
 
-    code->code = MEDIA_BUS_FMT_SBGGR12_1X12;
+    code->code = ar0144_format.code;
 	return 0;
-};
-
-static struct v4l2_mbus_framefmt ar0144_format = {
-	.width = 1280,
-	.height = 800,
-	.code = MEDIA_BUS_FMT_SBGGR12_1X12,
-	.field = V4L2_FIELD_NONE,
-	.colorspace = V4L2_COLORSPACE_SRGB,
 };
 
 static int ar0144_get_fmt(struct v4l2_subdev *sd, struct v4l2_subdev_state *state, struct v4l2_subdev_format *fmt)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
 	struct ar0144_state *ar_state = to_ar0144_state(sd);
-	const struct v4l2_mbus_framefmt *format;
 
 	dev_info(&client->dev, "Get format\n");
 
-	// hardcode for now 
-	format = &ar0144_format;
-
 	mutex_lock(&ar_state->lock);
-	fmt->format = *format;
+	fmt->format = ar_state->fmt;
 	mutex_unlock(&ar_state->lock);
+
 	return 0;
 };
 
 static int ar0144_set_fmt(struct v4l2_subdev *sd, struct v4l2_subdev_state *state, struct v4l2_subdev_format *fmt)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
+	struct ar0144_state *ar_state = to_ar0144_state(sd);
+
 	dev_info(&client->dev, "Set format\n");
-	// do nothing for now
+
+	ar0144_adj_fmt(&fmt->format);
+
+	mutex_lock(&ar_state->lock);
+	ar_state->fmt = fmt->format;
+	mutex_unlock(&ar_state->lock);
+
 	return 0;
 };
 
 static int ar0144_get_selection(struct v4l2_subdev *sd, struct v4l2_subdev_state *state, struct v4l2_subdev_selection *sel)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
-	dev_info(&client->dev, "Get selection\n");
 
 	switch (sel->target) {
 	case V4L2_SEL_TGT_NATIVE_SIZE:
+		sel->r.left = 0;
+		sel->r.top = 0;
+		sel->r.width = 1280;
+		sel->r.height = 800;
+		dev_info(&client->dev, "Get selection V4L2_SEL_TGT_NATIVE_SIZE hardcoded to 1080, 800\n");
+		break;
 	case V4L2_SEL_TGT_CROP_BOUNDS:
+		sel->r.left = 0;
+		sel->r.top = 0;
+		sel->r.width = 1280;
+		sel->r.height = 800;
+		dev_info(&client->dev, "Get selection V4L2_SEL_TGT_CROP_BOUNDS hardcoded to 1080, 800\n");
+		break;
 	case V4L2_SEL_TGT_CROP_DEFAULT:
+		sel->r.left = 0;
+		sel->r.top = 0;
+		sel->r.width = 1280;
+		sel->r.height = 800;
+		dev_info(&client->dev, "Get selection V4L2_SEL_TGT_CROP_DEFAULT hardcoded to 1080, 800\n");
+		break;
 	case V4L2_SEL_TGT_CROP:
 		sel->r.left = 0;
 		sel->r.top = 0;
 		sel->r.width = 1280;
 		sel->r.height = 800;
-		dev_info(&client->dev, "Get selection hardcoded to 1080, 800\n");
+		dev_info(&client->dev, "Get selection V4L2_SEL_TGT_CROP hardcoded to 1080, 800\n");
 		break;
 
 	default:
@@ -346,7 +375,7 @@ static int ar0144_subdev_link_setup(struct media_entity *entity, const struct me
 	struct v4l2_subdev *sd = media_entity_to_v4l2_subdev(entity);
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
 	
-	dev_info(&client->dev, "TODO: link setup\n");
+	dev_dbg(&client->dev, "Notification: %s link setup\n", DRIVER_NAME);
 	return ret;
 };
 
@@ -423,6 +452,7 @@ static int ar0144_init_controls(struct ar0144_state *state)
 	struct ar0144_ctrls *ctrls = &state->ctrls;
 	struct v4l2_ctrl_handler *ctrl_handler = &ctrls->handler;
 	struct i2c_client *client = v4l2_get_subdevdata(&state->sd);
+	struct v4l2_fwnode_device_properties props;
 	int ret = 0;
 
 	#define AR0144_NUM_CTRLS	6
@@ -476,19 +506,29 @@ static int ar0144_init_controls(struct ar0144_state *state)
 	}
 
 	/* orientation is front user facing */
-	ctrls->orientation = v4l2_ctrl_new_std(ctrl_handler, ops, V4L2_CID_CAMERA_ORIENTATION, 
-						0, 2, STEP_VALUE_1, V4L2_CAMERA_ORIENTATION_FRONT);
+	ctrls->orientation = v4l2_ctrl_new_std_menu(ctrl_handler, ops, V4L2_CID_CAMERA_ORIENTATION, 
+						V4L2_CAMERA_ORIENTATION_EXTERNAL, 0, V4L2_CAMERA_ORIENTATION_FRONT);
 	if (ctrl_handler->error) {
 		dev_err(&client->dev, "orientation v4l2_ctrl_new_std %s failed: %#010X\n", DRIVER_NAME, ctrl_handler->error);
 		goto ctrl_error;
 	}
 
-	ctrls->hblank->flags |= V4L2_CTRL_FLAG_READ_ONLY;
-	ctrls->vblank->flags |= V4L2_CTRL_FLAG_READ_ONLY;
+	// parse the device tree to fetch the sensor properties
+	ret = v4l2_fwnode_device_parse(&client->dev, &props);
+	if (ret)
+		goto ctrl_error;
+
+	ret = v4l2_ctrl_new_fwnode_properties(ctrl_handler, ops, &props);
+	if (ret)
+		goto ctrl_error;
+	
 	ctrls->pixel_rate->flags |= V4L2_CTRL_FLAG_READ_ONLY;
-	ctrls->exposure->flags |= V4L2_CTRL_FLAG_READ_ONLY;
+	ctrls->hblank->flags |= V4L2_CTRL_FLAG_VOLATILE;
+	ctrls->vblank->flags |= V4L2_CTRL_FLAG_VOLATILE;
+	ctrls->exposure->flags |= V4L2_CTRL_FLAG_VOLATILE;
 	ctrls->analog_gain->flags |= V4L2_CTRL_FLAG_READ_ONLY;
 	ctrls->orientation->flags |= V4L2_CTRL_FLAG_READ_ONLY;
+
 	state->sd.ctrl_handler = ctrl_handler;
 
 	return ret;
@@ -545,6 +585,9 @@ static int ar0144_probe(struct i2c_client *client)
 		dev_err(&client->dev, "Probe %s unable to init controls: %#010X\n", DRIVER_NAME, ret);
 		goto exit_probe;
 	}
+
+	// set the format details
+	ar0144_adj_fmt(&state->fmt);
 
 	ret = v4l2_async_register_subdev_sensor(&state->sd);
 	if (ret < 0) {

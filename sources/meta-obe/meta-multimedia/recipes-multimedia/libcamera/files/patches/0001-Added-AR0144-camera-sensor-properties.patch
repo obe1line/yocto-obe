@@ -1,0 +1,32 @@
+From 3858a37533cfbe11e702b5d2866f88086bebe1ad Mon Sep 17 00:00:00 2001
+From: Chris Storah <chris.storah@gmail.com>
+Date: Sun, 25 Feb 2024 17:16:21 +1100
+Subject: [PATCH] Added AR0144 camera sensor properties
+
+---
+ src/libcamera/camera_sensor_properties.cpp | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/src/libcamera/camera_sensor_properties.cpp b/src/libcamera/camera_sensor_properties.cpp
+index 6e28b09e..02ecbe0d 100644
+--- a/src/libcamera/camera_sensor_properties.cpp
++++ b/src/libcamera/camera_sensor_properties.cpp
+@@ -52,6 +52,15 @@ LOG_DEFINE_CATEGORY(CameraSensorProperties)
+ const CameraSensorProperties *CameraSensorProperties::get(const std::string &sensor)
+ {
+ 	static const std::map<std::string, const CameraSensorProperties> sensorProps = {
++		{ "ar0144", {
++			.unitCellSize = { 2200, 2200 },
++			.testPatternModes = {
++				{ controls::draft::TestPatternModeOff, 0 },
++				{ controls::draft::TestPatternModeSolidColor, 1 },
++				{ controls::draft::TestPatternModeColorBars, 2 },
++				{ controls::draft::TestPatternModeColorBarsFadeToGray, 3 },
++			},
++		} },
+ 		{ "ar0521", {
+ 			.unitCellSize = { 2200, 2200 },
+ 			.testPatternModes = {
+-- 
+2.39.2
+
