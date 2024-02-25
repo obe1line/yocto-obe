@@ -15,6 +15,7 @@
 #include <linux/kernel.h>
 #include <linux/media.h>
 #include <linux/module.h>
+#include <linux/regmap.h>
 #include <media/v4l2-device.h>
 #include <media/v4l2-ioctl.h>
 #include <media/v4l2-subdev.h>
@@ -64,6 +65,19 @@ struct ar0144_ctrls {
 	struct v4l2_ctrl *orientation;
 };
 
+struct ar0144_reg_val_pair {
+	u16 reg;
+	u16 val;
+};
+
+static const struct ar0144_reg_val_pair ar0144_stream_enable[] = {
+	{0x3028, 0x0010},	/* ??? */
+	{0x301A, 0x005C},	/* start stream */
+};
+
+static const struct ar0144_reg_val_pair ar0144_stream_disable[] = {
+	{0x301A, 0x0058},	/* stop stream */
+};
 
 struct ar0144_state {
 	struct v4l2_subdev sd;
@@ -72,6 +86,14 @@ struct ar0144_state {
 	struct ar0144_ctrls ctrls;
 	struct timing timings;
 	struct v4l2_mbus_framefmt fmt;
+	struct regmap *regs;
+};
+
+const struct regmap_config ar0144_regmap_config = {
+	.reg_bits = 16,
+	.val_bits = 16,
+	.max_register = 0x3FFF,
+	.cache_type = REGCACHE_NONE,
 };
 
 /*
@@ -175,7 +197,63 @@ static int ar0144_event_subdev_unsubscribe(struct v4l2_subdev *sd, struct v4l2_f
 	return 0;
 };
 
+static int ar0144_write_register_array(struct ar0144_state *state,
+				       const struct ar0144_reg_val_pair *regs,
+				       unsigned int num_pairs)
+{
+	unsigned int index = 0;
+	int ret = 0;
+
+	for (index = 0; index < num_pairs; ++index, ++regs) {
+		ret = state->regs->write(regs->reg, regs->val);
+		if (ret < 0)
+			break;
+	}
+
+	return ret;
+}
+
+static int ar0144_subdev_s_power(struct v4l2_subdev *sd, int on)
+{
+	struct i2c_client *client = v4l2_get_subdevdata(sd);
+	struct ar0144_state *ar_state = to_ar0144_state(sd);
+	int ret = 0;
+	uint val;
+	
+	dev_info(&client->dev, "Subdev %s power %s\n", DRIVER_NAME, on ? "on" : "off");
+
+	// power on handled externally via a script for now so just detect and setup registers
+	
+	mutex_lock(&ar_state->lock);
+	if (on) {
+		// power on
+
+		// check the sensor ID
+		ret = ar_state->regs->read(AR0144_ID_REG, &val);
+		if (ret < 0) {
+			dev_err(&client->dev, "Error reading AR0144 identifier\n");
+			goto power_out;
+		}
+		if (val != AR0144_ID_VAL) {
+			dev_err(&client->dev, "Incorrect identifier (%#06X) for AR0144. Expected (%#06X).\n", val, AR0144_ID_VAL);
+			ret = -ENODEV;
+			goto power_out;
+		}
+
+		dev_info(&client->dev, "Detected AR0144\n");
+	}
+	else {
+		// power off
+		dev_info(&client->dev, "Power off %s\n", DRIVER_NAME);
+	}
+
+power_out:
+	mutex_unlock(&ar_state->lock);
+	return 0;
+};
+
 static const struct v4l2_subdev_core_ops ar0144_core_ops = {
+	.s_power = ar0144_subdev_s_power,
 	.log_status = ar0144_ctrl_subdev_log_status,
 	.subscribe_event = ar0144_ctrl_subdev_subscribe_event,
 	.unsubscribe_event = ar0144_event_subdev_unsubscribe,
@@ -185,21 +263,43 @@ static int ar0144_g_frame_interval(struct v4l2_subdev *sd, struct v4l2_subdev_fr
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
 	dev_info(&client->dev, "%s Get frame interval\n", DRIVER_NAME);
+	// TODO: fetch from state
+	fi->interval.numerator = 1;
+	fi->interval.denominator = 60;
 	return 0;
 };
 
 static int ar0144_s_frame_interval(struct v4l2_subdev *sd, struct v4l2_subdev_frame_interval *fi)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
-	dev_info(&client->dev, "%s Set frame interval\n", DRIVER_NAME);
+	dev_dbg(&client->dev, "%s Set frame interval. numerator: %d, denominator: %d\n", DRIVER_NAME,
+		fi->interval.numerator, fi->interval.denominator);
+	// TODO: store in state
 	return 0;
 };
 
 static int ar0144_s_stream(struct v4l2_subdev *sd, int enable)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
-	dev_info(&client->dev, "%s Set stream\n", DRIVER_NAME);
-	return 0;
+	struct ar0144_state *state = to_ar0144_state(sd);
+	int ret = 0;
+
+	dev_dbg(&client->dev, "%s Set stream: enable=%d\n", DRIVER_NAME, enable);
+
+	if (enable) {
+		ret = ar0144_write_register_array(state, ar0144_stream_enable, ARRAY_SIZE(ar0144_stream_enable));
+		if (ret < 0) {
+			dev_err(&client->dev, "Error writing stream enable registers\n");
+		}
+	}
+	else {
+		ret = ar0144_write_register_array(state, ar0144_stream_disable, ARRAY_SIZE(ar0144_stream_disable));
+		if (ret < 0) {
+			dev_err(&client->dev, "Error writing stream disable registers\n");
+		}
+	}
+
+	return ret;
 };
 
 static const struct v4l2_subdev_video_ops ar0144_video_ops = {
@@ -565,6 +665,14 @@ static int ar0144_probe(struct i2c_client *client)
 
 	mutex_init(&state->lock);
 
+	// setup the regmap for the sensor
+	state->regs = devm_regmap_init_i2c(client, &ar0144_regmap_config);
+	if (IS_ERR(state->regs)) {
+		ret = PTR_ERR(state->regs);
+		dev_err(&client->dev, "Probe %s unable to init regmap: %#010X\n", DRIVER_NAME, ret);
+		goto exit_probe;
+	}
+
 	dev_info(&client->dev, "Initialised %s state\n", DRIVER_NAME);
 
 	state->pad.flags = MEDIA_PAD_FL_SOURCE;
@@ -594,6 +702,9 @@ static int ar0144_probe(struct i2c_client *client)
 		dev_err(&client->dev, "Probe %s unable to resister async: %#010X\n", DRIVER_NAME, ret);
 		goto exit_probe;
 	}
+
+	// power on the sensor
+	ar0144_subdev_s_power(&state->sd, 1);
 
 	dev_info(&client->dev, "Probe %s successful\n", DRIVER_NAME);
 	return ret;
