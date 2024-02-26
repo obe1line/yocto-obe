@@ -90,9 +90,8 @@ struct ar0144_state {
 };
 
 const struct regmap_config ar0144_regmap_config = {
-	.reg_bits = 16,
-	.val_bits = 16,
-	.max_register = 0x3FFF,
+	.reg_bits = 8,
+	.val_bits = 8,
 	.cache_type = REGCACHE_NONE,
 };
 
@@ -205,7 +204,7 @@ static int ar0144_write_register_array(struct ar0144_state *state,
 	int ret = 0;
 
 	for (index = 0; index < num_pairs; ++index, ++regs) {
-		ret = state->regs->write(regs->reg, regs->val);
+		ret = regmap_write(state->regs, regs->reg, regs->val);
 		if (ret < 0)
 			break;
 	}
@@ -218,7 +217,7 @@ static int ar0144_subdev_s_power(struct v4l2_subdev *sd, int on)
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
 	struct ar0144_state *ar_state = to_ar0144_state(sd);
 	int ret = 0;
-	uint val;
+	unsigned int val;
 	
 	dev_info(&client->dev, "Subdev %s power %s\n", DRIVER_NAME, on ? "on" : "off");
 
@@ -228,10 +227,15 @@ static int ar0144_subdev_s_power(struct v4l2_subdev *sd, int on)
 	if (on) {
 		// power on
 
-		// check the sensor ID
-		ret = ar_state->regs->read(AR0144_ID_REG, &val);
+		ret = regmap_read(ar_state->regs, 0x10, &val);		// val should be 0x0043
 		if (ret < 0) {
-			dev_err(&client->dev, "Error reading AR0144 identifier\n");
+			dev_err(&client->dev, "Error reading AR0144 register 0x10: %#10X  %#10X\n", ret, val);
+		}
+
+		// check the sensor ID
+		ret = regmap_read(ar_state->regs, AR0144_ID_REG, &val);
+		if (ret < 0) {
+			dev_err(&client->dev, "Error reading AR0144 identifier: %#10X\n", ret);
 			goto power_out;
 		}
 		if (val != AR0144_ID_VAL) {
@@ -649,6 +653,9 @@ static int ar0144_probe(struct i2c_client *client)
 	struct ar0144_state *state;
 	int ret = 0;
 
+	dev_info(&client->dev, "Probing %s driver\n", DRIVER_NAME);
+	dev_info(&client->dev, "I2C address: %d\n", client->addr);
+
 	state = devm_kzalloc(&client->dev, sizeof(*state), GFP_KERNEL);
 	if (!state) {
 		return -ENOMEM;
@@ -673,6 +680,7 @@ static int ar0144_probe(struct i2c_client *client)
 		goto exit_probe;
 	}
 
+	dev_info(&client->dev, "%s regmap: %ld\n", DRIVER_NAME, (long int)state->regs);
 	dev_info(&client->dev, "Initialised %s state\n", DRIVER_NAME);
 
 	state->pad.flags = MEDIA_PAD_FL_SOURCE;
