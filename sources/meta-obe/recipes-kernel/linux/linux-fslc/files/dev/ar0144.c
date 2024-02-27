@@ -26,7 +26,7 @@
 
 #define AR0144_I2C_ADDR      0x10
 #define AR0144_ID_REG        0x3000
-#define AR0144_ID_VAL        0x1356
+#define AR0144_ID_VAL        0x0356
 
 #define AR0144_MIN_HBLANK 0
 #define AR0144_MAX_HBLANK 65536
