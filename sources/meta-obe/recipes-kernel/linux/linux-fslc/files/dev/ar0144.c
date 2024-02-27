@@ -89,9 +89,10 @@ struct ar0144_state {
 	struct regmap *regs;
 };
 
+// The AR0144 sensor has mostly a 16-bit register interface. Handle 8-bit and 32-bit with another regmap?
  const struct regmap_config ar0144_regmap_config = {
 	.reg_bits = 16,
-	.val_bits = 8,
+	.val_bits = 16,
 	.cache_type = REGCACHE_NONE,
 };
 
@@ -212,12 +213,32 @@ static int ar0144_write_register_array(struct ar0144_state *state,
 	return ret;
 }
 
+int validate_sensor_identifier(struct ar0144_state *state)
+{
+	struct i2c_client *client = v4l2_get_subdevdata(&state->sd);
+	unsigned int val = 0;
+	int ret = 0;
+
+	ret = regmap_read(state->regs, AR0144_ID_REG, &val);
+	if (ret < 0) {
+		dev_err(&client->dev, "Unable to read sensor registers: error %#010X\n", ret);
+	}
+	else {
+		dev_info(&client->dev, "Detected sensor identifier of %#06X\n", val);
+		if (val != AR0144_ID_VAL) {
+			dev_err(&client->dev, "Unsupported sensor\n");
+			ret = -ENODEV;
+		}
+	}
+
+	return ret;
+}
+
 static int ar0144_subdev_s_power(struct v4l2_subdev *sd, int on)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
 	struct ar0144_state *ar_state = to_ar0144_state(sd);
 	int ret = 0;
-	unsigned int val;
 	
 	dev_info(&client->dev, "Subdev power %s\n", on ? "on" : "off");
 
@@ -229,18 +250,13 @@ static int ar0144_subdev_s_power(struct v4l2_subdev *sd, int on)
 		// TODO: control power to the sensor
 
 		// check the sensor ID
-		ret = regmap_read(ar_state->regs, AR0144_ID_REG, &val);
+		ret = validate_sensor_identifier(ar_state);
 		if (ret < 0) {
-			dev_err(&client->dev, "Error reading identifier: %#010X\n", ret);
-			goto power_out;
-		}
-		if (val != AR0144_ID_VAL) {
-			dev_err(&client->dev, "Incorrect identifier (%#06X). Expected (%#06X).\n", val, AR0144_ID_VAL);
-			ret = -ENODEV;
+			dev_err(&client->dev, "Unsupported sensor\n");
 			goto power_out;
 		}
 
-		dev_info(&client->dev, "Detected sensor\n");
+		dev_info(&client->dev, "Power on\n");
 	}
 	else {
 		// power off
@@ -249,7 +265,7 @@ static int ar0144_subdev_s_power(struct v4l2_subdev *sd, int on)
 
 power_out:
 	mutex_unlock(&ar_state->lock);
-	return 0;
+	return ret;
 };
 
 static const struct v4l2_subdev_core_ops ar0144_core_ops = {
@@ -639,46 +655,6 @@ ctrl_error:
 	return ret;
 }
 
-static int test_i2c_read2(struct device *dev, u16 reg, u16 *val, unsigned short addr)
-{
-	struct i2c_client *i2c = to_i2c_client(dev);
-
-	i2c->addr = addr;
-	u8 buf[2];
-	int ret;
-
-	buf[0] = reg >> 8;
-	buf[1] = reg & 0xff;
-
-	dev_info(&i2c->dev, "Reading I2C register: address=%#04X, reg=%#010X\n", i2c->addr, reg);
-	dev_info(&i2c->dev, "Reading I2C register: buf[0]=%#04X  buf[1]=%#04X\n", buf[0], buf[1]);
-
-	ret = i2c_master_send(i2c, buf, 2);
-	if (ret < 0) {
-		dev_err(&i2c->dev,
-			"%s: write reg error %d: reg=%x\n",
-			__func__, ret, reg);
-		return ret;
-	}
-
-	ret = i2c_master_recv(i2c, buf, 2);
-	if (ret < 0) {
-		dev_err(&i2c->dev,
-			"%s: read reg error %d: reg=%x\n",
-			__func__, ret, reg);
-		return ret;
-	}
-	*val = buf[0] << 8;
-	*val |= (buf[1] & 0xff);
-
-	dev_info(&i2c->dev, "Reading I2C register: buf[0]=%#04X  buf[1]=%#04X\n", buf[0], buf[1]);
-	dev_info(&i2c->dev, "Reading I2C register: *val=%#06X, ret=%#010X\n", *val, ret);
-
-	i2c->addr = 0x10;	// sensor
-
-	return 0;
-}
-
 /*
 Probe is called when the kernel matches a device tree node with the driver compatibile names.
 After allocating memory for the device, the function checks the device ID to ensure it is the correct device.
@@ -688,11 +664,6 @@ static int ar0144_probe(struct i2c_client *client)
 {
 	struct ar0144_state *state;
 	int ret = 0;
-	unsigned int val = 0;
-	unsigned int reg = 0;
-	// u16 reg2 = AR0144_ID_REG;
-	u16 reg2 = 0x0000;
-	u16 val2 = 0;
 
 	dev_info(&client->dev, "Probing driver\n");
 	dev_info(&client->dev, "I2C address: %#04X\n", client->addr);
@@ -709,23 +680,6 @@ static int ar0144_probe(struct i2c_client *client)
 		dev_err(&client->dev, "Probe unable to init regmap: %#010X\n", ret);
 		goto exit_probe;
 	}
-
-	// TEST
-	reg2 = 0x3000;		// ID
-	ret = test_i2c_read2(&client->dev, reg2, &val2, 0x10);
-	dev_info(&client->dev, "I2C 0x10 read: reg2=%#010X  ret=%#010X  val=%#010X\n", reg2, ret, val2);
-
-	reg = AR0144_ID_REG;
-	ret = regmap_read(state->regs, reg, &val);		// val should be 0x0043
-	dev_err(&client->dev, "Reading with regmap AR0144_ID_REG register: ret=%#010X  val=%#010X\n", ret, val);
-
-	ret = -6;
-	goto exit_probe;
-	// END TEST
-
-
-
-
 
 	/* Initialise the V4L2 structure and set the flags for a subdevice sensor */
 	v4l2_i2c_subdev_init(&state->sd, client, &ar0144_subdev_ops);
@@ -769,7 +723,11 @@ static int ar0144_probe(struct i2c_client *client)
 	}
 
 	// power on the sensor
-	ar0144_subdev_s_power(&state->sd, 1);
+	ret = ar0144_subdev_s_power(&state->sd, 1);
+	if (ret < 0) {
+		dev_err(&client->dev, "Probe unable to power on sensor: %#010X\n", ret);
+		goto exit_probe;
+	}
 
 	dev_info(&client->dev, "Probe successful\n");
 	return ret;
