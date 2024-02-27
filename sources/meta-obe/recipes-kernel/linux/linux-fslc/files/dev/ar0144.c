@@ -89,8 +89,8 @@ struct ar0144_state {
 	struct regmap *regs;
 };
 
-const struct regmap_config ar0144_regmap_config = {
-	.reg_bits = 8,
+ const struct regmap_config ar0144_regmap_config = {
+	.reg_bits = 16,
 	.val_bits = 8,
 	.cache_type = REGCACHE_NONE,
 };
@@ -144,27 +144,27 @@ static inline struct ar0144_ctrls *ctrl_handler_to_ar0144_ctrls(struct v4l2_ctrl
 static void ar0144_subdev_unregistered(struct v4l2_subdev *sd)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
-	dev_info(&client->dev, "Subdev %s unregistered\n", DRIVER_NAME);
+	dev_info(&client->dev, "Subdev unregistered\n");
 };
 
 static int ar0144_subdev_registered(struct v4l2_subdev *sd)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
-	dev_info(&client->dev, "Subdev %s registered\n", DRIVER_NAME);
+	dev_info(&client->dev, "Subdev registered\n");
     return 0;
 };
 
 static int ar0144_subdev_open(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
-	dev_info(&client->dev, "Subdev %s open\n", DRIVER_NAME);
+	dev_info(&client->dev, "Subdev open\n");
 	return 0;
 };
 
 static int ar0144_subdev_close(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
-	dev_info(&client->dev, "Subdev %s close\n", DRIVER_NAME);
+	dev_info(&client->dev, "Subdev close\n");
 	return 0;
 };
 
@@ -178,21 +178,21 @@ static const struct v4l2_subdev_internal_ops ar0144_subdev_internal_ops = {
 static int ar0144_ctrl_subdev_log_status(struct v4l2_subdev *sd)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
-	dev_info(&client->dev, "Subdev %s log status\n", DRIVER_NAME);
+	dev_info(&client->dev, "Subdev log status\n");
 	return 0;
 };
 
 static int ar0144_ctrl_subdev_subscribe_event(struct v4l2_subdev *sd, struct v4l2_fh *fh, struct v4l2_event_subscription *sub)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
-	dev_info(&client->dev, "Subdev %s subscribe event\n", DRIVER_NAME);
+	dev_info(&client->dev, "Subdev subscribe event\n");
 	return 0;
 };
 
 static int ar0144_event_subdev_unsubscribe(struct v4l2_subdev *sd, struct v4l2_fh *fh, struct v4l2_event_subscription *sub)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
-	dev_info(&client->dev, "Subdev %s unsubscribe event\n", DRIVER_NAME);
+	dev_info(&client->dev, "Subdev unsubscribe event\n");
 	return 0;
 };
 
@@ -219,36 +219,32 @@ static int ar0144_subdev_s_power(struct v4l2_subdev *sd, int on)
 	int ret = 0;
 	unsigned int val;
 	
-	dev_info(&client->dev, "Subdev %s power %s\n", DRIVER_NAME, on ? "on" : "off");
+	dev_info(&client->dev, "Subdev power %s\n", on ? "on" : "off");
 
 	// power on handled externally via a script for now so just detect and setup registers
 	
 	mutex_lock(&ar_state->lock);
 	if (on) {
 		// power on
-
-		ret = regmap_read(ar_state->regs, 0x10, &val);		// val should be 0x0043
-		if (ret < 0) {
-			dev_err(&client->dev, "Error reading AR0144 register 0x10: %#10X  %#10X\n", ret, val);
-		}
+		// TODO: control power to the sensor
 
 		// check the sensor ID
 		ret = regmap_read(ar_state->regs, AR0144_ID_REG, &val);
 		if (ret < 0) {
-			dev_err(&client->dev, "Error reading AR0144 identifier: %#10X\n", ret);
+			dev_err(&client->dev, "Error reading identifier: %#010X\n", ret);
 			goto power_out;
 		}
 		if (val != AR0144_ID_VAL) {
-			dev_err(&client->dev, "Incorrect identifier (%#06X) for AR0144. Expected (%#06X).\n", val, AR0144_ID_VAL);
+			dev_err(&client->dev, "Incorrect identifier (%#06X). Expected (%#06X).\n", val, AR0144_ID_VAL);
 			ret = -ENODEV;
 			goto power_out;
 		}
 
-		dev_info(&client->dev, "Detected AR0144\n");
+		dev_info(&client->dev, "Detected sensor\n");
 	}
 	else {
 		// power off
-		dev_info(&client->dev, "Power off %s\n", DRIVER_NAME);
+		dev_info(&client->dev, "Power off\n");
 	}
 
 power_out:
@@ -266,7 +262,7 @@ static const struct v4l2_subdev_core_ops ar0144_core_ops = {
 static int ar0144_g_frame_interval(struct v4l2_subdev *sd, struct v4l2_subdev_frame_interval *fi)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
-	dev_info(&client->dev, "%s Get frame interval\n", DRIVER_NAME);
+	dev_info(&client->dev, "Get frame interval\n");
 	// TODO: fetch from state
 	fi->interval.numerator = 1;
 	fi->interval.denominator = 60;
@@ -276,7 +272,7 @@ static int ar0144_g_frame_interval(struct v4l2_subdev *sd, struct v4l2_subdev_fr
 static int ar0144_s_frame_interval(struct v4l2_subdev *sd, struct v4l2_subdev_frame_interval *fi)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
-	dev_dbg(&client->dev, "%s Set frame interval. numerator: %d, denominator: %d\n", DRIVER_NAME,
+	dev_dbg(&client->dev, "Set frame interval. numerator: %d, denominator: %d\n",
 		fi->interval.numerator, fi->interval.denominator);
 	// TODO: store in state
 	return 0;
@@ -288,7 +284,7 @@ static int ar0144_s_stream(struct v4l2_subdev *sd, int enable)
 	struct ar0144_state *state = to_ar0144_state(sd);
 	int ret = 0;
 
-	dev_dbg(&client->dev, "%s Set stream: enable=%d\n", DRIVER_NAME, enable);
+	dev_dbg(&client->dev, "Set stream: enable=%d\n", enable);
 
 	if (enable) {
 		ret = ar0144_write_register_array(state, ar0144_stream_enable, ARRAY_SIZE(ar0144_stream_enable));
@@ -479,7 +475,7 @@ static int ar0144_subdev_link_setup(struct media_entity *entity, const struct me
 	struct v4l2_subdev *sd = media_entity_to_v4l2_subdev(entity);
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
 	
-	dev_dbg(&client->dev, "Notification: %s link setup\n", DRIVER_NAME);
+	dev_dbg(&client->dev, "Notification: link setup\n");
 	return ret;
 };
 
@@ -546,7 +542,7 @@ static int ar0144_init_timings(struct ar0144_state *state)
 	state->timings.vblank = AR0144_1280_800_VBLANK_VALUE;
 	state->timings.exposure = AR0144_1280_800_EXPOSURE_VALUE;
 	state->timings.analog_gain = AR0144_1280_800_ANALOG_GAIN_VALUE;
-	dev_info(&client->dev, "Initialised %s timings\n", DRIVER_NAME);
+	dev_info(&client->dev, "Initialised timings\n");
 	return 0;
 }
 
@@ -565,7 +561,7 @@ static int ar0144_init_controls(struct ar0144_state *state)
 	// initialise the control handler for all controls
 	v4l2_ctrl_handler_init(ctrl_handler, AR0144_NUM_CTRLS);
 	if (ctrl_handler->error) {
-		dev_err(&client->dev, "v4l2_ctrl_handler_init %s failed: %#010X\n", DRIVER_NAME, ctrl_handler->error);
+		dev_err(&client->dev, "v4l2_ctrl_handler_init failed: %#010X\n", ctrl_handler->error);
 		return ctrl_handler->error;
 	}
 
@@ -573,7 +569,7 @@ static int ar0144_init_controls(struct ar0144_state *state)
 	ctrls->hblank = v4l2_ctrl_new_std(ctrl_handler, ops, V4L2_CID_HBLANK, 
 						AR0144_MIN_HBLANK, AR0144_MAX_HBLANK, STEP_VALUE_1, state->timings.hblank);
 	if (ctrl_handler->error) {
-		dev_err(&client->dev, "hblank v4l2_ctrl_new_std %s failed: %#010X\n", DRIVER_NAME, ctrl_handler->error);
+		dev_err(&client->dev, "hblank v4l2_ctrl_new_std failed: %#010X\n", ctrl_handler->error);
 		goto ctrl_error;
 	}
 
@@ -581,7 +577,7 @@ static int ar0144_init_controls(struct ar0144_state *state)
 	ctrls->vblank = v4l2_ctrl_new_std(ctrl_handler, ops, V4L2_CID_VBLANK, 
 						AR0144_MIN_VBLANK, AR0144_MAX_VBLANK, STEP_VALUE_1, state->timings.vblank);
 	if (ctrl_handler->error) {
-		dev_err(&client->dev, "vblank v4l2_ctrl_new_std %s failed: %#010X\n", DRIVER_NAME, ctrl_handler->error);
+		dev_err(&client->dev, "vblank v4l2_ctrl_new_std failed: %#010X\n", ctrl_handler->error);
 		goto ctrl_error;
 	}
 
@@ -589,7 +585,7 @@ static int ar0144_init_controls(struct ar0144_state *state)
 	ctrls->pixel_rate = v4l2_ctrl_new_std(ctrl_handler, ops, V4L2_CID_PIXEL_RATE, 
 						AR0144_MIN_PIXEL_RATE, AR0144_MAX_PIXEL_RATE, STEP_VALUE_1, state->timings.pixel_rate);
 	if (ctrl_handler->error) {
-		dev_err(&client->dev, "pixel_rate v4l2_ctrl_new_std %s failed: %#010X\n", DRIVER_NAME, ctrl_handler->error);
+		dev_err(&client->dev, "pixel_rate v4l2_ctrl_new_std failed: %#010X\n", ctrl_handler->error);
 		goto ctrl_error;
 	}
 
@@ -597,7 +593,7 @@ static int ar0144_init_controls(struct ar0144_state *state)
 	ctrls->exposure = v4l2_ctrl_new_std(ctrl_handler, ops, V4L2_CID_EXPOSURE, 
 						AR0144_MIN_EXPOSURE, AR0144_MAX_EXPOSURE, STEP_VALUE_1, state->timings.exposure);
 	if (ctrl_handler->error) {
-		dev_err(&client->dev, "exposure v4l2_ctrl_new_std %s failed: %#010X\n", DRIVER_NAME, ctrl_handler->error);
+		dev_err(&client->dev, "exposure v4l2_ctrl_new_std failed: %#010X\n", ctrl_handler->error);
 		goto ctrl_error;
 	}
 	
@@ -605,7 +601,7 @@ static int ar0144_init_controls(struct ar0144_state *state)
 	ctrls->analog_gain = v4l2_ctrl_new_std(ctrl_handler, ops, V4L2_CID_ANALOGUE_GAIN, 
 						AR0144_MIN_ANALOG_GAIN, AR0144_MAX_ANALOG_GAIN, STEP_VALUE_1, state->timings.analog_gain);
 	if (ctrl_handler->error) {
-		dev_err(&client->dev, "analog_gain v4l2_ctrl_new_std %s failed: %#010X\n", DRIVER_NAME, ctrl_handler->error);
+		dev_err(&client->dev, "analog_gain v4l2_ctrl_new_std failed: %#010X\n", ctrl_handler->error);
 		goto ctrl_error;
 	}
 
@@ -613,7 +609,7 @@ static int ar0144_init_controls(struct ar0144_state *state)
 	ctrls->orientation = v4l2_ctrl_new_std_menu(ctrl_handler, ops, V4L2_CID_CAMERA_ORIENTATION, 
 						V4L2_CAMERA_ORIENTATION_EXTERNAL, 0, V4L2_CAMERA_ORIENTATION_FRONT);
 	if (ctrl_handler->error) {
-		dev_err(&client->dev, "orientation v4l2_ctrl_new_std %s failed: %#010X\n", DRIVER_NAME, ctrl_handler->error);
+		dev_err(&client->dev, "orientation v4l2_ctrl_new_std failed: %#010X\n", ctrl_handler->error);
 		goto ctrl_error;
 	}
 
@@ -643,6 +639,46 @@ ctrl_error:
 	return ret;
 }
 
+static int test_i2c_read2(struct device *dev, u16 reg, u16 *val, unsigned short addr)
+{
+	struct i2c_client *i2c = to_i2c_client(dev);
+
+	i2c->addr = addr;
+	u8 buf[2];
+	int ret;
+
+	buf[0] = reg >> 8;
+	buf[1] = reg & 0xff;
+
+	dev_info(&i2c->dev, "Reading I2C register: address=%#04X, reg=%#010X\n", i2c->addr, reg);
+	dev_info(&i2c->dev, "Reading I2C register: buf[0]=%#04X  buf[1]=%#04X\n", buf[0], buf[1]);
+
+	ret = i2c_master_send(i2c, buf, 2);
+	if (ret < 0) {
+		dev_err(&i2c->dev,
+			"%s: write reg error %d: reg=%x\n",
+			__func__, ret, reg);
+		return ret;
+	}
+
+	ret = i2c_master_recv(i2c, buf, 2);
+	if (ret < 0) {
+		dev_err(&i2c->dev,
+			"%s: read reg error %d: reg=%x\n",
+			__func__, ret, reg);
+		return ret;
+	}
+	*val = buf[0] << 8;
+	*val |= (buf[1] & 0xff);
+
+	dev_info(&i2c->dev, "Reading I2C register: buf[0]=%#04X  buf[1]=%#04X\n", buf[0], buf[1]);
+	dev_info(&i2c->dev, "Reading I2C register: *val=%#06X, ret=%#010X\n", *val, ret);
+
+	i2c->addr = 0x10;	// sensor
+
+	return 0;
+}
+
 /*
 Probe is called when the kernel matches a device tree node with the driver compatibile names.
 After allocating memory for the device, the function checks the device ID to ensure it is the correct device.
@@ -652,14 +688,44 @@ static int ar0144_probe(struct i2c_client *client)
 {
 	struct ar0144_state *state;
 	int ret = 0;
+	unsigned int val = 0;
+	unsigned int reg = 0;
+	// u16 reg2 = AR0144_ID_REG;
+	u16 reg2 = 0x0000;
+	u16 val2 = 0;
 
-	dev_info(&client->dev, "Probing %s driver\n", DRIVER_NAME);
-	dev_info(&client->dev, "I2C address: %d\n", client->addr);
+	dev_info(&client->dev, "Probing driver\n");
+	dev_info(&client->dev, "I2C address: %#04X\n", client->addr);
 
 	state = devm_kzalloc(&client->dev, sizeof(*state), GFP_KERNEL);
 	if (!state) {
 		return -ENOMEM;
 	}
+
+	// setup the regmap for the sensor
+	state->regs = devm_regmap_init_i2c(client, &ar0144_regmap_config);
+	if (IS_ERR(state->regs)) {
+		ret = PTR_ERR(state->regs);
+		dev_err(&client->dev, "Probe unable to init regmap: %#010X\n", ret);
+		goto exit_probe;
+	}
+
+	// TEST
+	reg2 = 0x3000;		// ID
+	ret = test_i2c_read2(&client->dev, reg2, &val2, 0x10);
+	dev_info(&client->dev, "I2C 0x10 read: reg2=%#010X  ret=%#010X  val=%#010X\n", reg2, ret, val2);
+
+	reg = AR0144_ID_REG;
+	ret = regmap_read(state->regs, reg, &val);		// val should be 0x0043
+	dev_err(&client->dev, "Reading with regmap AR0144_ID_REG register: ret=%#010X  val=%#010X\n", ret, val);
+
+	ret = -6;
+	goto exit_probe;
+	// END TEST
+
+
+
+
 
 	/* Initialise the V4L2 structure and set the flags for a subdevice sensor */
 	v4l2_i2c_subdev_init(&state->sd, client, &ar0144_subdev_ops);
@@ -672,33 +738,24 @@ static int ar0144_probe(struct i2c_client *client)
 
 	mutex_init(&state->lock);
 
-	// setup the regmap for the sensor
-	state->regs = devm_regmap_init_i2c(client, &ar0144_regmap_config);
-	if (IS_ERR(state->regs)) {
-		ret = PTR_ERR(state->regs);
-		dev_err(&client->dev, "Probe %s unable to init regmap: %#010X\n", DRIVER_NAME, ret);
-		goto exit_probe;
-	}
-
-	dev_info(&client->dev, "%s regmap: %ld\n", DRIVER_NAME, (long int)state->regs);
-	dev_info(&client->dev, "Initialised %s state\n", DRIVER_NAME);
+	dev_info(&client->dev, "Initialised state\n");
 
 	state->pad.flags = MEDIA_PAD_FL_SOURCE;
 	ret = media_entity_pads_init(&state->sd.entity, 1, &state->pad);
 	if (ret) {
-		dev_err(&client->dev, "Probe %s unable to init media pads: %#010X\n", DRIVER_NAME, ret);
+		dev_err(&client->dev, "Probe unable to init media pads: %#010X\n", ret);
 		goto exit_probe;
 	}
 
 	ret = ar0144_init_timings(state);
 	if (ret < 0) {
-		dev_err(&client->dev, "Probe %s unable to init timings: %#010X\n", DRIVER_NAME, ret);
+		dev_err(&client->dev, "Probe unable to init timings: %#010X\n", ret);
 		goto exit_probe;
 	}
 
 	ret = ar0144_init_controls(state);
 	if (ret < 0) {
-		dev_err(&client->dev, "Probe %s unable to init controls: %#010X\n", DRIVER_NAME, ret);
+		dev_err(&client->dev, "Probe unable to init controls: %#010X\n", ret);
 		goto exit_probe;
 	}
 
@@ -707,14 +764,14 @@ static int ar0144_probe(struct i2c_client *client)
 
 	ret = v4l2_async_register_subdev_sensor(&state->sd);
 	if (ret < 0) {
-		dev_err(&client->dev, "Probe %s unable to resister async: %#010X\n", DRIVER_NAME, ret);
+		dev_err(&client->dev, "Probe unable to resister async: %#010X\n", ret);
 		goto exit_probe;
 	}
 
 	// power on the sensor
 	ar0144_subdev_s_power(&state->sd, 1);
 
-	dev_info(&client->dev, "Probe %s successful\n", DRIVER_NAME);
+	dev_info(&client->dev, "Probe successful\n");
 	return ret;
 
 exit_probe:
@@ -729,9 +786,14 @@ static void ar0144_remove(struct i2c_client *client)
 {
 	struct v4l2_subdev *sd = i2c_get_clientdata(client);
 	struct ar0144_state *state = to_ar0144_state(sd);
-	v4l2_async_unregister_subdev(sd);
+
+	if (sd) {
+		ar0144_subdev_s_power(sd, 0);
+		v4l2_async_unregister_subdev(sd);
+	}
+
 	mutex_destroy(&state->lock);
-	dev_info(&client->dev, "Removed %s driver\n", DRIVER_NAME);
+	dev_info(&client->dev, "Removed driver\n");
 }
 
 /* create the init and exit functions */

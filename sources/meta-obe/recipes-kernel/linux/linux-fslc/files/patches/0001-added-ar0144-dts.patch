@@ -49,16 +49,16 @@ index 000000000000..81b6e65a0e33
 +        ar0144_camera@10 {
 +                compatible = "onnn,ar0144";
 +                reg = <0x10>;
-+                pinctrl-names = "default";
-+                pinctrl-0 = <&pinctrl_camera>;
++                /* pinctrl-names = "default"; */
++                /* pinctrl-0 = <&pinctrl_camera>; */
 +                clocks = <&clk IMX8MN_CLK_CLKO1>;
 +                clock-names = "xclk";
 +                assigned-clocks = <&clk IMX8MN_CLK_CLKO1>;
 +                assigned-clock-parents = <&clk IMX8MN_CLK_24M>;
 +                assigned-clock-rates = <24000000>;
 +                csi_id = <0x00>;
-+                powerdown-gpios = <&gpio1 7 GPIO_ACTIVE_HIGH>;
-+                reset-gpios = <&gpio1 6 GPIO_ACTIVE_LOW>;
++                /* powerdown-gpios = <&gpio1 7 GPIO_ACTIVE_HIGH>; */
++                /* reset-gpios = <&gpio1 6 GPIO_ACTIVE_LOW>; */
 +                orientation = <2>;
 +                mclk = <24000000>;
 +                mclk_source = <0>;
