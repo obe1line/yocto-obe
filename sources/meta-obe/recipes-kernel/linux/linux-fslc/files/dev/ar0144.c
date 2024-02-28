@@ -24,10 +24,17 @@
 
 #define DRIVER_NAME "ar0144"
 
+// default I2C address
 #define AR0144_I2C_ADDR      0x10
-#define AR0144_ID_REG        0x3000
+
+// register addresses
+#define AR0144_ID_REG               0x3000
+#define AR0144_TEST_PATTERN_MODE    0x3070
+
+// sensor identifier
 #define AR0144_ID_VAL        0x0356
 
+// values
 #define AR0144_MIN_HBLANK 0
 #define AR0144_MAX_HBLANK 65536
 #define AR0144_MIN_VBLANK 0
@@ -38,7 +45,6 @@
 #define AR0144_MAX_EXPOSURE 1023
 #define AR0144_MIN_ANALOG_GAIN 0
 #define AR0144_MAX_ANALOG_GAIN 1023
-
 #define AR0144_PIXEL_RATE				74250000
 #define AR0144_1280_800_HBLANK_VALUE	208
 #define AR0144_1280_800_VBLANK_VALUE	27
@@ -63,6 +69,15 @@ struct ar0144_ctrls {
 	struct v4l2_ctrl *exposure;
 	struct v4l2_ctrl *analog_gain;
 	struct v4l2_ctrl *orientation;
+	struct v4l2_ctrl *test_pattern;
+};
+
+// supported test patterns as per MIPI CCS v1.1 section 10 "Test Modes"
+static const char * const test_pattern_menu[] = {
+	"No pattern",
+	"Solid color",
+	"100% Color bars",
+	"Fade-to-grey color bars",
 };
 
 struct ar0144_reg_val_pair {
@@ -71,7 +86,7 @@ struct ar0144_reg_val_pair {
 };
 
 static const struct ar0144_reg_val_pair ar0144_stream_enable[] = {
-	{0x3028, 0x0010},	/* ??? */
+//	{0x3028, 0x0010},	/* ??? */
 	{0x301A, 0x005C},	/* start stream */
 };
 
@@ -179,23 +194,37 @@ static const struct v4l2_subdev_internal_ops ar0144_subdev_internal_ops = {
 static int ar0144_ctrl_subdev_log_status(struct v4l2_subdev *sd)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
-	dev_info(&client->dev, "Subdev log status\n");
+	struct ar0144_state *state = to_ar0144_state(sd);
+	dev_info(&client->dev, "Sensor status:\n");
+	dev_info(&client->dev, "  Test pattern: %d\n", state->ctrls.test_pattern->val);
 	return 0;
 };
 
-static int ar0144_ctrl_subdev_subscribe_event(struct v4l2_subdev *sd, struct v4l2_fh *fh, struct v4l2_event_subscription *sub)
-{
-	struct i2c_client *client = v4l2_get_subdevdata(sd);
-	dev_info(&client->dev, "Subdev subscribe event\n");
-	return 0;
-};
+// static int ar0144_ctrl_subdev_subscribe_event(struct v4l2_subdev *sd, struct v4l2_fh *fh, struct v4l2_event_subscription *sub)
+// {
+// 	struct i2c_client *client = v4l2_get_subdevdata(sd);
+// 	dev_info(&client->dev, "Subdev subscribe event\n");
 
-static int ar0144_event_subdev_unsubscribe(struct v4l2_subdev *sd, struct v4l2_fh *fh, struct v4l2_event_subscription *sub)
-{
-	struct i2c_client *client = v4l2_get_subdevdata(sd);
-	dev_info(&client->dev, "Subdev unsubscribe event\n");
-	return 0;
-};
+// 	if (sub->type == V4L2_EVENT_CTRL) {
+// 		dev_info(&client->dev, "Subdev subscribe event: V4L2_EVENT_CTRL, id=%#010X\n");
+// 		switch(sub->id){
+// 			case V4L2_CID_EXPOSURE:
+// 				dev_info(&client->dev, "Subdev subscribe event: V4L2_CID_EXPOSURE\n");
+// 				break;
+// 		}
+// 	}
+// 	else {
+// 		dev_info(&client->dev, "Subdev subscribe event: unknown\n");
+// 	}
+// 	return 0;
+// };
+
+// static int ar0144_event_subdev_unsubscribe(struct v4l2_subdev *sd, struct v4l2_fh *fh, struct v4l2_event_subscription *sub)
+// {
+// 	struct i2c_client *client = v4l2_get_subdevdata(sd);
+// 	dev_info(&client->dev, "Subdev unsubscribe event\n");
+// 	return 0;
+// };
 
 static int ar0144_write_register_array(struct ar0144_state *state,
 				       const struct ar0144_reg_val_pair *regs,
@@ -268,11 +297,20 @@ power_out:
 	return ret;
 };
 
+long int ar0144_subdev_ioctl(struct v4l2_subdev *sd, unsigned int cmd, void *arg)
+{
+	struct i2c_client *client = v4l2_get_subdevdata(sd);
+	dev_info(&client->dev, "Subdev ioctl. cmd = %#010X\n", cmd);
+	return 0;
+};
+
+
 static const struct v4l2_subdev_core_ops ar0144_core_ops = {
+	.ioctl = ar0144_subdev_ioctl,
 	.s_power = ar0144_subdev_s_power,
 	.log_status = ar0144_ctrl_subdev_log_status,
-	.subscribe_event = ar0144_ctrl_subdev_subscribe_event,
-	.unsubscribe_event = ar0144_event_subdev_unsubscribe,
+	// .subscribe_event = ar0144_ctrl_subdev_subscribe_event,		// only needed if the sensor generates events
+	// .unsubscribe_event = ar0144_event_subdev_unsubscribe,
 };
 
 static int ar0144_g_frame_interval(struct v4l2_subdev *sd, struct v4l2_subdev_frame_interval *fi)
@@ -338,16 +376,33 @@ static int ar0144_init_cfg(struct v4l2_subdev *sd, struct v4l2_subdev_state *sta
 
 static struct v4l2_mbus_framefmt ar0144_format;
 
+int ar0144_set_fmt_to_defaults(struct ar0144_state *state)
+{
+	struct v4l2_mbus_framefmt *fmt = &state->fmt;
+
+	fmt->width = 1080;
+	fmt->height = 800;
+	fmt->code = MEDIA_BUS_FMT_SRGGB12_1X12;
+	fmt->field = V4L2_FIELD_NONE;
+	fmt->colorspace = V4L2_COLORSPACE_SRGB;
+	// fmt->colorspace = V4L2_COLORSPACE_SRGB;
+	// fmt->ycbcr_enc = V4L2_YCBCR_ENC_DEFAULT;
+	// fmt->quantization = V4L2_QUANTIZATION_FULL_RANGE;
+	// fmt->xfer_func = V4L2_XFER_FUNC_DEFAULT;
+	return 0;
+};
+
 static void ar0144_adj_fmt(struct v4l2_mbus_framefmt *fmt)
 {
 	fmt->width = clamp(ALIGN(fmt->width, 4), AR0144_WIDTH_MIN, AR0144_WIDTH_MAX);
 	fmt->height = clamp(ALIGN(fmt->height, 4), AR0144_HEIGHT_MIN, AR0144_HEIGHT_MAX);
 	fmt->code = MEDIA_BUS_FMT_SRGGB12_1X12;
 	fmt->field = V4L2_FIELD_NONE;
+	// fmt->colorspace = V4L2_COLORSPACE_RAW;
 	fmt->colorspace = V4L2_COLORSPACE_SRGB;
-	fmt->ycbcr_enc = V4L2_YCBCR_ENC_DEFAULT;
-	fmt->quantization = V4L2_QUANTIZATION_FULL_RANGE;
-	fmt->xfer_func = V4L2_XFER_FUNC_DEFAULT;
+	// fmt->ycbcr_enc = V4L2_YCBCR_ENC_DEFAULT;
+	// fmt->quantization = V4L2_QUANTIZATION_FULL_RANGE;
+	// fmt->xfer_func = V4L2_XFER_FUNC_DEFAULT;
 }
 
 static int ar0144_enum_mbus_code(struct v4l2_subdev *sd, struct v4l2_subdev_state *state, struct v4l2_subdev_mbus_code_enum *code)
@@ -361,6 +416,7 @@ static int ar0144_enum_mbus_code(struct v4l2_subdev *sd, struct v4l2_subdev_stat
 	}
 
     code->code = ar0144_format.code;
+	dev_info(&client->dev, "MEDIA_BUS_FMT_SRGGB12_1X12 = %#010X, code = %#010X\n", MEDIA_BUS_FMT_SRGGB12_1X12, code->code);
 	return 0;
 };
 
@@ -369,11 +425,13 @@ static int ar0144_get_fmt(struct v4l2_subdev *sd, struct v4l2_subdev_state *stat
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
 	struct ar0144_state *ar_state = to_ar0144_state(sd);
 
-	dev_info(&client->dev, "Get format\n");
+	dev_info(&client->dev, "Get format 1. fmt->code=%#010X arstate->fmt.code=%#010X\n", fmt->format.code, ar_state->fmt.code);
 
 	mutex_lock(&ar_state->lock);
 	fmt->format = ar_state->fmt;
 	mutex_unlock(&ar_state->lock);
+
+	dev_info(&client->dev, "Get format 2. fmt->code=%#010X\n", fmt->format.code);
 
 	return 0;
 };
@@ -382,13 +440,17 @@ static int ar0144_set_fmt(struct v4l2_subdev *sd, struct v4l2_subdev_state *stat
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
 	struct ar0144_state *ar_state = to_ar0144_state(sd);
+	struct v4l2_mbus_framefmt *mbus_fmt = &fmt->format;
 
-	dev_info(&client->dev, "Set format\n");
+	dev_info(&client->dev, "Set format. code=%#010X\n", mbus_fmt->code);
+	dev_info(&client->dev, "Set format. width=%d, height=%d\n", mbus_fmt->width, mbus_fmt->height);
+	dev_info(&client->dev, "Set format. field=%d, colorspace=%d\n", mbus_fmt->field, mbus_fmt->colorspace);
 
-	ar0144_adj_fmt(&fmt->format);
+	ar0144_adj_fmt(mbus_fmt);
 
 	mutex_lock(&ar_state->lock);
-	ar_state->fmt = fmt->format;
+	// ar_state->fmt = *mbus_fmt;
+	dev_info(&client->dev, "Ignoring set format\n");
 	mutex_unlock(&ar_state->lock);
 
 	return 0;
@@ -541,7 +603,41 @@ static int ar0144_s_ctrl(struct v4l2_ctrl *ctrl)
 	struct ar0144_ctrls *ctrls = ctrl_handler_to_ar0144_ctrls(ctrl->handler);
 	struct ar0144_state *state = ar0144_ctrls_to_ar0144_state(ctrls);
 	struct i2c_client *client = v4l2_get_subdevdata(&state->sd);
-	dev_info(&client->dev, "Set control\n");
+	int ret = 0;
+
+	dev_info(&client->dev, "Set control %#010X\n", ctrl->id);
+	switch (ctrl->id) {
+		case V4L2_CID_HBLANK:
+			dev_info(&client->dev, "V4L2_CID_HBLANK\n");	
+			break;
+		case V4L2_CID_VBLANK:
+			dev_info(&client->dev, "V4L2_CID_VBLANK\n");	
+			break;
+		case V4L2_CID_ANALOGUE_GAIN:
+			dev_info(&client->dev, "V4L2_CID_ANALOGUE_GAIN\n");	
+			break;
+		case V4L2_CID_GAIN:
+			dev_info(&client->dev, "V4L2_CID_GAIN\n");	
+			break;
+		case V4L2_CID_RED_BALANCE:
+			dev_info(&client->dev, "V4L2_CID_RED_BALANCE\n");	
+			break;
+		case V4L2_CID_BLUE_BALANCE:
+			dev_info(&client->dev, "V4L2_CID_BLUE_BALANCE\n");	
+			break;
+		case V4L2_CID_EXPOSURE:
+			dev_info(&client->dev, "V4L2_CID_EXPOSURE\n");	
+			break;
+		case V4L2_CID_TEST_PATTERN:
+			dev_info(&client->dev, "V4L2_CID_TEST_PATTERN\n");
+			ret = regmap_write(state->regs, AR0144_TEST_PATTERN_MODE, ctrl->val);
+			break;
+		default:
+			dev_err(&client->dev, "Unsupported control %#010X\n", ctrl->id);
+			ret = -EINVAL;
+			break;
+	}
+
 	return 0;
 }
 
@@ -571,7 +667,7 @@ static int ar0144_init_controls(struct ar0144_state *state)
 	struct v4l2_fwnode_device_properties props;
 	int ret = 0;
 
-	#define AR0144_NUM_CTRLS	6
+	#define AR0144_NUM_CTRLS	7
 	#define STEP_VALUE_1	1
 
 	// initialise the control handler for all controls
@@ -629,6 +725,14 @@ static int ar0144_init_controls(struct ar0144_state *state)
 		goto ctrl_error;
 	}
 
+	/* test pattern */
+	ctrls->test_pattern = v4l2_ctrl_new_std_menu_items(ctrl_handler, ops, V4L2_CID_TEST_PATTERN,
+					ARRAY_SIZE(test_pattern_menu) - 1, 0, 0, test_pattern_menu);
+	if (ctrl_handler->error) {
+		dev_err(&client->dev, "test_pattern v4l2_ctrl_new_std failed: %#010X\n", ctrl_handler->error);
+		goto ctrl_error;
+	}
+	
 	// parse the device tree to fetch the sensor properties
 	ret = v4l2_fwnode_device_parse(&client->dev, &props);
 	if (ret)
@@ -714,7 +818,11 @@ static int ar0144_probe(struct i2c_client *client)
 	}
 
 	// set the format details
-	ar0144_adj_fmt(&state->fmt);
+	ret = ar0144_set_fmt_to_defaults(state);
+	if (ret < 0) {
+		dev_err(&client->dev, "Probe unable to set default formats: %#010X\n", ret);
+		goto exit_probe;
+	}
 
 	ret = v4l2_async_register_subdev_sensor(&state->sd);
 	if (ret < 0) {
