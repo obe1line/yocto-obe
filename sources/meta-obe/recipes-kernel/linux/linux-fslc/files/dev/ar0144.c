@@ -504,6 +504,8 @@ static int ar0144_enum_frame_size(struct v4l2_subdev *sd, struct v4l2_subdev_sta
     case 0:
         fse->min_width = 1280;
         fse->min_height = 800;
+		fse->max_width = 1280;
+		fse->max_height = 800;
         break;
     default:
         return -EINVAL;
