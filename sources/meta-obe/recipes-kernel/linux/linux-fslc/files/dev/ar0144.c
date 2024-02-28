@@ -374,8 +374,6 @@ static int ar0144_init_cfg(struct v4l2_subdev *sd, struct v4l2_subdev_state *sta
 #define AR0144_HEIGHT_MIN	8u
 #define AR0144_HEIGHT_MAX	812u
 
-static struct v4l2_mbus_framefmt ar0144_format;
-
 int ar0144_set_fmt_to_defaults(struct ar0144_state *state)
 {
 	struct v4l2_mbus_framefmt *fmt = &state->fmt;
@@ -408,6 +406,8 @@ static void ar0144_adj_fmt(struct v4l2_mbus_framefmt *fmt)
 static int ar0144_enum_mbus_code(struct v4l2_subdev *sd, struct v4l2_subdev_state *state, struct v4l2_subdev_mbus_code_enum *code)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
+	struct ar0144_state *ar_state = to_ar0144_state(sd);
+
 	dev_info(&client->dev, "Enum mbus code\n");
 
 	/* for now, only support 1 format at index 0 */
@@ -415,7 +415,7 @@ static int ar0144_enum_mbus_code(struct v4l2_subdev *sd, struct v4l2_subdev_stat
 	    return -EINVAL;
 	}
 
-    code->code = ar0144_format.code;
+    code->code = ar_state->fmt.code;
 	dev_info(&client->dev, "MEDIA_BUS_FMT_SRGGB12_1X12 = %#010X, code = %#010X\n", MEDIA_BUS_FMT_SRGGB12_1X12, code->code);
 	return 0;
 };
@@ -425,13 +425,12 @@ static int ar0144_get_fmt(struct v4l2_subdev *sd, struct v4l2_subdev_state *stat
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
 	struct ar0144_state *ar_state = to_ar0144_state(sd);
 
-	dev_info(&client->dev, "Get format 1. fmt->code=%#010X arstate->fmt.code=%#010X\n", fmt->format.code, ar_state->fmt.code);
-
 	mutex_lock(&ar_state->lock);
 	fmt->format = ar_state->fmt;
 	mutex_unlock(&ar_state->lock);
 
-	dev_info(&client->dev, "Get format 2. fmt->code=%#010X\n", fmt->format.code);
+	dev_info(&client->dev, "Get format. fmt->code=%#010X\n", fmt->format.code);
+	dev_info(&client->dev, "Get format. fmt->width=%d, fmt->height=%d\n", fmt->format.width, fmt->format.height);
 
 	return 0;
 };
@@ -449,8 +448,7 @@ static int ar0144_set_fmt(struct v4l2_subdev *sd, struct v4l2_subdev_state *stat
 	ar0144_adj_fmt(mbus_fmt);
 
 	mutex_lock(&ar_state->lock);
-	// ar_state->fmt = *mbus_fmt;
-	dev_info(&client->dev, "Ignoring set format\n");
+	ar_state->fmt = *mbus_fmt;
 	mutex_unlock(&ar_state->lock);
 
 	return 0;
