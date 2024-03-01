@@ -28,29 +28,84 @@ index 89aee6c92576..eb540658c1ab 100644
  dtb-$(CONFIG_ARCH_MXC) += imx8mn-tqma8mqnl-mba8mx.dtb
  dtb-$(CONFIG_ARCH_MXC) += imx8mn-var-som-symphony.dtb
  dtb-$(CONFIG_ARCH_MXC) += imx8mn-venice-gw7902.dtb
+diff --git a/arch/arm64/boot/dts/freescale/imx8mn-ddr4-evk-poc.dts b/arch/arm64/boot/dts/freescale/imx8mn-ddr4-evk-poc.dts
+new file mode 100644
+index 000000000000..81b6e65a0e33
+--- /dev/null
++++ b/arch/arm64/boot/dts/freescale/imx8mn-ddr4-evk-poc.dts
+@@ -0,0 +1,50 @@
++// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
++/*
++ * Copyright 2024
++ * OV5640 sensor support on I2C3 address 0x3C
++ */
++
++/dts-v1/;
++
++#include "imx8mn-ddr4-evk-poc.dtsi"
++
++&i2c3 {
++	camera@3c {
++		compatible = "ovti,ov5640";
++		reg = <0x3c>;
++		pinctrl-names = "default";
++		pinctrl-0 = <&pinctrl_camera>;
++		clocks = <&clk IMX8MN_CLK_CLKO1>;
++		clock-names = "xclk";
++		assigned-clocks = <&clk IMX8MN_CLK_CLKO1>;
++		assigned-clock-parents = <&clk IMX8MN_CLK_24M>;
++		assigned-clock-rates = <24000000>;
++		powerdown-gpios = <&gpio1 7 GPIO_ACTIVE_HIGH>;
++		reset-gpios = <&gpio1 6 GPIO_ACTIVE_LOW>;
++
++		port {
++			ov5640_to_mipi_csi2: endpoint {
++				remote-endpoint = <&imx8mn_mipi_csi_in>;
++				clock-lanes = <0>;
++				data-lanes = <1 2>;
++			};
++		};
++	};
++};
++
++&isi {
++	status = "okay";
++};
++
++&mipi_csi {
++	status = "okay";
++
++	ports {
++		port@0 {
++			imx8mn_mipi_csi_in: endpoint {
++				remote-endpoint = <&ov5640_to_mipi_csi2>;
++				data-lanes = <1 2>;
++			};
++		};
++	};
++};
 diff --git a/arch/arm64/boot/dts/freescale/imx8mn-ddr4-evk-poc-ar0144.dts b/arch/arm64/boot/dts/freescale/imx8mn-ddr4-evk-poc-ar0144.dts
 new file mode 100644
 index 000000000000..81b6e65a0e33
 --- /dev/null
 +++ b/arch/arm64/boot/dts/freescale/imx8mn-ddr4-evk-poc-ar0144.dts
-@@ -0,0 +1,59 @@
+@@ -0,0 +1,58 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright 2024
++ * AR0144 sensor support on I2C3 address 0x10
 + */
 +
 +/dts-v1/;
 +
-+#include "imx8mn-ddr4-evk-poc.dts"
++#include "imx8mn-ddr4-evk-poc.dtsi"
 +
 +&i2c3 {
-+        /delete-node/ ov5640_camera@3c;
-+
 +        ar0144_camera@10 {
 +                compatible = "onnn,ar0144";
 +                reg = <0x10>;
-+                /* pinctrl-names = "default"; */
-+                /* pinctrl-0 = <&pinctrl_camera>; */
++                pinctrl-names = "default";
++                pinctrl-0 = <&pinctrl_camera_poc>;     /* only CLK pin */
 +                clocks = <&clk IMX8MN_CLK_CLKO1>;
 +                clock-names = "xclk";
 +                assigned-clocks = <&clk IMX8MN_CLK_CLKO1>;
@@ -71,11 +126,11 @@ index 000000000000..81b6e65a0e33
 +                                /* link-frequencies = /bits/ 64 <900000000>; */
 +                                clock-lanes = <0>;
 +                                data-lanes = <1 2>;
++                                csis-hs-settle = <9>;      /* 450-410Mbits/z */
 +                        };
 +                };
 +        };
 +};
-+
 +
 +&isi {
 +	status = "okay";
@@ -93,11 +148,11 @@ index 000000000000..81b6e65a0e33
 +		};
 +	};
 +};
-diff --git a/arch/arm64/boot/dts/freescale/imx8mn-ddr4-evk-poc.dts b/arch/arm64/boot/dts/freescale/imx8mn-ddr4-evk-poc.dts
+diff --git a/arch/arm64/boot/dts/freescale/imx8mn-ddr4-evk-poc.dtsi b/arch/arm64/boot/dts/freescale/imx8mn-ddr4-evk-poc.dtsi
 new file mode 100644
 index 000000000000..c9881ff9af45
 --- /dev/null
-+++ b/arch/arm64/boot/dts/freescale/imx8mn-ddr4-evk-poc.dts
++++ b/arch/arm64/boot/dts/freescale/imx8mn-ddr4-evk-poc.dtsi
 @@ -0,0 +1,160 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
@@ -264,7 +319,7 @@ new file mode 100644
 index 000000000000..601ee0cb089f
 --- /dev/null
 +++ b/arch/arm64/boot/dts/freescale/imx8mn-evk-poc.dtsi
-@@ -0,0 +1,690 @@
+@@ -0,0 +1,659 @@
 +// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
 +/*
 + * Copyright 2019 NXP
@@ -526,45 +581,6 @@ index 000000000000..601ee0cb089f
 +		gpio-controller;
 +		#gpio-cells = <2>;
 +	};
-+
-+	camera@3c {
-+		compatible = "ovti,ov5640";
-+		reg = <0x3c>;
-+		pinctrl-names = "default";
-+		pinctrl-0 = <&pinctrl_camera>;
-+		clocks = <&clk IMX8MN_CLK_CLKO1>;
-+		clock-names = "xclk";
-+		assigned-clocks = <&clk IMX8MN_CLK_CLKO1>;
-+		assigned-clock-parents = <&clk IMX8MN_CLK_24M>;
-+		assigned-clock-rates = <24000000>;
-+		powerdown-gpios = <&gpio1 7 GPIO_ACTIVE_HIGH>;
-+		reset-gpios = <&gpio1 6 GPIO_ACTIVE_LOW>;
-+
-+		port {
-+			ov5640_to_mipi_csi2: endpoint {
-+				remote-endpoint = <&imx8mn_mipi_csi_in>;
-+				clock-lanes = <0>;
-+				data-lanes = <1 2>;
-+			};
-+		};
-+	};
-+};
-+
-+&isi {
-+	status = "okay";
-+};
-+
-+&mipi_csi {
-+	status = "okay";
-+
-+	ports {
-+		port@0 {
-+			imx8mn_mipi_csi_in: endpoint {
-+				remote-endpoint = <&ov5640_to_mipi_csi2>;
-+				data-lanes = <1 2>;
-+			};
-+		};
-+	};
 +};
 +
 +&lcdif {
@@ -704,6 +720,14 @@ index 000000000000..601ee0cb089f
 +			MX8MN_IOMUXC_GPIO1_IO06_GPIO1_IO6		0x19
 +			MX8MN_IOMUXC_GPIO1_IO07_GPIO1_IO7		0x19
 +			MX8MN_IOMUXC_GPIO1_IO14_CCMSRCGPCMIX_CLKO1	0x59
++		>;
++	};
++
++	pinctrl_camera_poc: cameragrp {
++		fsl,pins = <
++			/* MX8MN_IOMUXC_GPIO1_IO06_GPIO1_IO6		0x19 */
++			/* MX8MN_IOMUXC_GPIO1_IO07_GPIO1_IO7		0x19 */
++			/* MX8MN_IOMUXC_GPIO1_IO14_CCMSRCGPCMIX_CLKO1	0x59 */
 +		>;
 +	};
 +
