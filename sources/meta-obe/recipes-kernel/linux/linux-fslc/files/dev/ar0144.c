@@ -306,7 +306,7 @@ long int ar0144_subdev_ioctl(struct v4l2_subdev *sd, unsigned int cmd, void *arg
 
 
 static const struct v4l2_subdev_core_ops ar0144_core_ops = {
-	.ioctl = ar0144_subdev_ioctl,
+	.ioctl = ar0144_subdev_ioctl,	// does this cause problems with usual s_stream handling etc?
 	.s_power = ar0144_subdev_s_power,
 	.log_status = ar0144_ctrl_subdev_log_status,
 	// .subscribe_event = ar0144_ctrl_subdev_subscribe_event,		// only needed if the sensor generates events
@@ -788,6 +788,7 @@ static int ar0144_probe(struct i2c_client *client)
 	/* Initialise the V4L2 structure and set the flags for a subdevice sensor */
 	v4l2_i2c_subdev_init(&state->sd, client, &ar0144_subdev_ops);
 	state->sd.flags |= V4L2_SUBDEV_FL_HAS_DEVNODE | V4L2_SUBDEV_FL_HAS_EVENTS;
+	state->sd.flags |= V4L2_SUBDEV_FL_STREAMS;		// supports streaming
 	state->sd.internal_ops = &ar0144_subdev_internal_ops;
 	state->sd.entity.function = MEDIA_ENT_F_CAM_SENSOR;
 	state->sd.entity.ops = &ar0144_media_ops;
