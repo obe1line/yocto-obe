@@ -313,24 +313,24 @@ static const struct v4l2_subdev_core_ops ar0144_core_ops = {
 	// .unsubscribe_event = ar0144_event_subdev_unsubscribe,
 };
 
-static int ar0144_g_frame_interval(struct v4l2_subdev *sd, struct v4l2_subdev_frame_interval *fi)
-{
-	struct i2c_client *client = v4l2_get_subdevdata(sd);
-	dev_info(&client->dev, "Get frame interval\n");
-	// TODO: fetch from state
-	fi->interval.numerator = 1;
-	fi->interval.denominator = 60;
-	return 0;
-};
+// static int ar0144_g_frame_interval(struct v4l2_subdev *sd, struct v4l2_subdev_frame_interval *fi)
+// {
+// 	struct i2c_client *client = v4l2_get_subdevdata(sd);
+// 	dev_info(&client->dev, "Get frame interval\n");
+// 	// TODO: fetch from state
+// 	fi->interval.numerator = 1;
+// 	fi->interval.denominator = 60;
+// 	return 0;
+// };
 
-static int ar0144_s_frame_interval(struct v4l2_subdev *sd, struct v4l2_subdev_frame_interval *fi)
-{
-	struct i2c_client *client = v4l2_get_subdevdata(sd);
-	dev_dbg(&client->dev, "Set frame interval. numerator: %d, denominator: %d\n",
-		fi->interval.numerator, fi->interval.denominator);
-	// TODO: store in state
-	return 0;
-};
+// static int ar0144_s_frame_interval(struct v4l2_subdev *sd, struct v4l2_subdev_frame_interval *fi)
+// {
+// 	struct i2c_client *client = v4l2_get_subdevdata(sd);
+// 	dev_dbg(&client->dev, "Set frame interval. numerator: %d, denominator: %d\n",
+// 		fi->interval.numerator, fi->interval.denominator);
+// 	// TODO: store in state
+// 	return 0;
+// };
 
 static int ar0144_s_stream(struct v4l2_subdev *sd, int enable)
 {
@@ -357,8 +357,8 @@ static int ar0144_s_stream(struct v4l2_subdev *sd, int enable)
 };
 
 static const struct v4l2_subdev_video_ops ar0144_video_ops = {
-	.g_frame_interval = ar0144_g_frame_interval,
-	.s_frame_interval = ar0144_s_frame_interval,
+	// .g_frame_interval = ar0144_g_frame_interval,
+	// .s_frame_interval = ar0144_s_frame_interval,
 	.s_stream = ar0144_s_stream,
 };
 
@@ -541,10 +541,30 @@ static const struct v4l2_subdev_pad_ops ar0144_pad_ops = {
 	.enum_frame_interval = ar0144_enum_frame_interval,
 };
 
+static int ar0144_skip_top_lines(struct v4l2_subdev *sd, unsigned int *lines)
+{
+	struct i2c_client *client = v4l2_get_subdevdata(sd);
+	dev_info(&client->dev, "Skip top lines\n");
+	return 0;
+};
+
+static int ar0144_skip_frames(struct v4l2_subdev *sd, unsigned int *frames)
+{
+	struct i2c_client *client = v4l2_get_subdevdata(sd);
+	dev_info(&client->dev, "Skip frames\n");
+	return 0;
+};
+
+static const struct v4l2_subdev_sensor_ops ar0144_sensor_ops = {
+	.g_skip_top_lines = ar0144_skip_top_lines,
+	.g_skip_frames = ar0144_skip_frames,
+};
+
 static const struct v4l2_subdev_ops ar0144_subdev_ops = {
 	.core = &ar0144_core_ops,
-	.video = &ar0144_video_ops,
+	// .video = &ar0144_video_ops,
 	.pad = &ar0144_pad_ops,
+	.sensor = &ar0144_sensor_ops,
 };
 
 static int ar0144_subdev_link_setup(struct media_entity *entity, const struct media_pad *local, const struct media_pad *remote, u32 flags)
@@ -558,8 +578,8 @@ static int ar0144_subdev_link_setup(struct media_entity *entity, const struct me
 };
 
 static const struct media_entity_operations ar0144_media_ops = {
-	.link_validate = v4l2_subdev_link_validate,
-	.link_setup = ar0144_subdev_link_setup,
+	// .link_validate = v4l2_subdev_link_validate,
+	.link_setup = &ar0144_subdev_link_setup,
 };
 
 static const struct i2c_device_id ar0144_idtable[] = {
@@ -788,7 +808,6 @@ static int ar0144_probe(struct i2c_client *client)
 	/* Initialise the V4L2 structure and set the flags for a subdevice sensor */
 	v4l2_i2c_subdev_init(&state->sd, client, &ar0144_subdev_ops);
 	state->sd.flags |= V4L2_SUBDEV_FL_HAS_DEVNODE | V4L2_SUBDEV_FL_HAS_EVENTS;
-	state->sd.flags |= V4L2_SUBDEV_FL_STREAMS;		// supports streaming
 	state->sd.internal_ops = &ar0144_subdev_internal_ops;
 	state->sd.entity.function = MEDIA_ENT_F_CAM_SENSOR;
 	state->sd.entity.ops = &ar0144_media_ops;

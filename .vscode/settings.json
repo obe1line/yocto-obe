@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "i2c.h": "c",
-        "mutex": "c"
+        "mutex": "c",
+        "regmap.h": "c"
     }
 }
