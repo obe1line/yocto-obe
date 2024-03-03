@@ -29,7 +29,10 @@
 
 // register addresses
 #define AR0144_ID_REG               0x3000
+#define AR0144_FRAME_COUNT          0x303A
+#define AR0144_FRAME_STATUS         0x303C
 #define AR0144_TEST_PATTERN_MODE    0x3070
+
 
 // sensor identifier
 #define AR0144_ID_VAL        0x0356
@@ -51,6 +54,23 @@
 #define AR0144_1280_800_EXPOSURE_VALUE	100
 #define AR0144_1280_800_ANALOG_GAIN_VALUE	0
 
+
+enum supported_link_freqs {
+	AR0144_LINK_FREQ_240_MHZ,
+	AR0144_LINK_FREQ_319_2_MHZ,
+	AR0144_NUM_SUPPORTED_LINK_FREQS
+};
+
+static const s64 link_freq[] = {
+	[AR0144_LINK_FREQ_240_MHZ] = 240000000,
+	[AR0144_LINK_FREQ_319_2_MHZ] = 319200000,
+};
+
+static const s64 pixel_rates[] = {
+	[AR0144_LINK_FREQ_240_MHZ] = 48000000,
+	[AR0144_LINK_FREQ_319_2_MHZ] = 63840000,
+};
+
 /* timing for the sensor */
 struct timing {
 	// output pixel_clock (max) is 74.25MHz as a default, 1280 x 800. 6-48MHz input clock.
@@ -70,6 +90,8 @@ struct ar0144_ctrls {
 	struct v4l2_ctrl *analog_gain;
 	struct v4l2_ctrl *orientation;
 	struct v4l2_ctrl *test_pattern;
+	struct v4l2_ctrl *pixel_clock;
+	struct v4l2_ctrl *link_freq;
 };
 
 // supported test patterns as per MIPI CCS v1.1 section 10 "Test Modes"
@@ -85,8 +107,63 @@ struct ar0144_reg_val_pair {
 	u16 val;
 };
 
+static const struct ar0144_reg_val_pair ar0144at_pll_27mhz[] = {
+	{0x302A, 0x0006},
+	{0x302C, 0x0001},
+	{0x302E, 0x0004},
+	{0x3030, 0x4a /*0x0042*/},
+	{0x3036, 0x000C},
+	{0x3038, 0x0001},
+	/* Addition settings from Oren */
+	{0x3080, 0x0000},
+	{0x3180, 0x0042},
+	{0x3182, 0x002E},
+	{0x3184, 0x1665},
+	{0x3186, 0x110E},
+	{0x3188, 0x2047},
+	{0x318a, 0x0105},
+	{0x318c, 0x0004},
+};
+
+static const struct ar0144_reg_val_pair ar0144at_mipi_2lane_12bit[] = {
+	{0x31AE, 0x0202},
+	{0x31AC, 0x0C0C},
+	{0x31B0, 0x0042},
+	{0x31B2, 0x002E},
+	{0x31B4, 0x1665},
+	{0x31B6, 0x110E},
+	{0x31B8, 0x2047},
+	{0x31BA, 0x0105},
+	{0x31BC, 0x0004},
+};
+
+static const struct ar0144_reg_val_pair ar0144at_1280x800_60fps[] = {
+	{0x3002, 0x0000},
+	{0x3004, 0x0004},
+	{0x3006, 0x031F},
+	{0x3008, 0x0503},
+	{0x300A, 0x0339},
+	{0x300C, 0x05D0},
+	{0x3012, 0x0064},
+	{0x30A2, 0x0001},
+	{0x30A6, 0x0001},
+	{0x3040, 0x0000},
+};
+
+static const struct ar0144_reg_val_pair ar0144at_context_b_2x2_binning[] = {
+	{0x3040, 0x1000},
+	{0x30A8, 0x0003},
+	{0x3040, 0x3000},
+	{0x30AE, 0x0003},
+};
+
+static const struct ar0144_reg_val_pair ar0144at_embedded_data_stats[] = {
+	{0x3064, 0x1982},
+};
+
+
 static const struct ar0144_reg_val_pair ar0144_stream_enable[] = {
-//	{0x3028, 0x0010},	/* ??? */
+	{0x3028, 0x0010},	/* ??? */
 	{0x301A, 0x005C},	/* start stream */
 };
 
@@ -102,6 +179,8 @@ struct ar0144_state {
 	struct timing timings;
 	struct v4l2_mbus_framefmt fmt;
 	struct regmap *regs;
+	enum supported_link_freqs link_freq_idx;
+	u64 enabled_streams;
 };
 
 // The AR0144 sensor has mostly a 16-bit register interface. Handle 8-bit and 32-bit with another regmap?
@@ -337,29 +416,86 @@ static int ar0144_s_stream(struct v4l2_subdev *sd, int enable)
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
 	struct ar0144_state *state = to_ar0144_state(sd);
 	int ret = 0;
+	unsigned int val = 0;
 
 	dev_dbg(&client->dev, "Set stream: enable=%d\n", enable);
 
+	mutex_lock(&state->lock);
+
 	if (enable) {
+		ret = ar0144_write_register_array(state, ar0144at_pll_27mhz, ARRAY_SIZE(ar0144at_pll_27mhz));
+		if (ret < 0) {
+			dev_err(&client->dev, "Error writing stream enable registers\n");
+			goto stream_exit;
+		}
+		
+		msleep(100);
+
+		ret = ar0144_write_register_array(state, ar0144at_mipi_2lane_12bit, ARRAY_SIZE(ar0144at_mipi_2lane_12bit));
+		if (ret < 0) {
+			dev_err(&client->dev, "Error writing stream enable registers\n");
+			goto stream_exit;
+		}
+
+		ret = ar0144_write_register_array(state, ar0144at_1280x800_60fps, ARRAY_SIZE(ar0144at_1280x800_60fps));
+		if (ret < 0) {
+			dev_err(&client->dev, "Error writing stream enable registers\n");
+			goto stream_exit;
+		}
+
+		ret = ar0144_write_register_array(state, ar0144at_context_b_2x2_binning, ARRAY_SIZE(ar0144at_context_b_2x2_binning));
+		if (ret < 0) {
+			dev_err(&client->dev, "Error writing stream enable registers\n");
+			goto stream_exit;
+		}
+
+		ret = ar0144_write_register_array(state, ar0144at_embedded_data_stats, ARRAY_SIZE(ar0144at_embedded_data_stats));
+		if (ret < 0) {
+			dev_err(&client->dev, "Error writing stream enable registers\n");
+			goto stream_exit;
+		}
+
 		ret = ar0144_write_register_array(state, ar0144_stream_enable, ARRAY_SIZE(ar0144_stream_enable));
 		if (ret < 0) {
 			dev_err(&client->dev, "Error writing stream enable registers\n");
 		}
+
+		msleep(100);
+
+		ret = regmap_read(state->regs, AR0144_FRAME_COUNT, &val);
+		if (ret == 0) {
+			dev_dbg(&client->dev, "%s: Frame count: %#010X\n", __func__, val);
+		}
+		ret = regmap_read(state->regs, AR0144_FRAME_STATUS, &val);
+		if (ret == 0) {
+			dev_dbg(&client->dev, "%s: Frame status: %#10X\n", __func__, val);
+		}
 	}
 	else {
+		// Stop streaming - report the frame count and status
+		ret = regmap_read(state->regs, AR0144_FRAME_COUNT, &val);
+		if (ret == 0) {
+			dev_dbg(&client->dev, "%s: Frame count: %#010X\n", __func__, val);
+		}
+		ret = regmap_read(state->regs, AR0144_FRAME_STATUS, &val);
+		if (ret == 0) {
+			dev_dbg(&client->dev, "%s: Frame status: %#10X\n", __func__, val);
+		}
 		ret = ar0144_write_register_array(state, ar0144_stream_disable, ARRAY_SIZE(ar0144_stream_disable));
 		if (ret < 0) {
 			dev_err(&client->dev, "Error writing stream disable registers\n");
 		}
 	}
 
+stream_exit:
+	mutex_unlock(&state->lock);
 	return ret;
 };
 
 static const struct v4l2_subdev_video_ops ar0144_video_ops = {
 	// .g_frame_interval = ar0144_g_frame_interval,
 	// .s_frame_interval = ar0144_s_frame_interval,
-	.s_stream = ar0144_s_stream,
+	.s_stream = ar0144_s_stream,		// legacy - see enable_streams
 };
 
 static int ar0144_init_cfg(struct v4l2_subdev *sd, struct v4l2_subdev_state *state)
@@ -531,6 +667,30 @@ static int ar0144_enum_frame_interval(struct v4l2_subdev *sd, struct v4l2_subdev
 	return 0;
 };
 
+static int ar0144_enable_subdev_streams(struct v4l2_subdev *sd, struct v4l2_subdev_state *state, u32 pad, u64 streams_mask)
+{
+	struct i2c_client *client = v4l2_get_subdevdata(sd);
+	// struct ar0144_state *state = to_ar0144_state(sd);
+
+	dev_info(&client->dev, "Enable subdev streams for pad: %d, mask: %lld\n", pad, streams_mask);
+
+	ar0144_s_stream(sd, 1);
+
+	return 0;
+};
+
+static int ar0144_disable_subdev_streams(struct v4l2_subdev *sd, struct v4l2_subdev_state *state, u32 pad, u64 streams_mask)
+{
+	struct i2c_client *client = v4l2_get_subdevdata(sd);
+	// struct ar0144_state *state = to_ar0144_state(sd);
+
+	dev_info(&client->dev, "Disable subdev streams for pad: %d, mask: %lld\n", pad, streams_mask);
+
+	ar0144_s_stream(sd, 0);
+
+	return 0;
+};
+
 static const struct v4l2_subdev_pad_ops ar0144_pad_ops = {
 	.init_cfg = ar0144_init_cfg,
 	.enum_mbus_code = ar0144_enum_mbus_code,
@@ -539,6 +699,8 @@ static const struct v4l2_subdev_pad_ops ar0144_pad_ops = {
 	.get_selection = ar0144_get_selection,
 	.enum_frame_size = ar0144_enum_frame_size,
 	.enum_frame_interval = ar0144_enum_frame_interval,
+	.enable_streams = ar0144_enable_subdev_streams,
+	.disable_streams = ar0144_disable_subdev_streams,
 };
 
 static int ar0144_skip_top_lines(struct v4l2_subdev *sd, unsigned int *lines)
@@ -562,7 +724,7 @@ static const struct v4l2_subdev_sensor_ops ar0144_sensor_ops = {
 
 static const struct v4l2_subdev_ops ar0144_subdev_ops = {
 	.core = &ar0144_core_ops,
-	// .video = &ar0144_video_ops,
+	.video = &ar0144_video_ops,
 	.pad = &ar0144_pad_ops,
 	.sensor = &ar0144_sensor_ops,
 };
@@ -674,6 +836,9 @@ static int ar0144_init_timings(struct ar0144_state *state)
 	state->timings.vblank = AR0144_1280_800_VBLANK_VALUE;
 	state->timings.exposure = AR0144_1280_800_EXPOSURE_VALUE;
 	state->timings.analog_gain = AR0144_1280_800_ANALOG_GAIN_VALUE;
+
+	state->link_freq_idx = AR0144_LINK_FREQ_240_MHZ;
+
 	dev_info(&client->dev, "Initialised timings\n");
 	return 0;
 }
@@ -687,7 +852,7 @@ static int ar0144_init_controls(struct ar0144_state *state)
 	struct v4l2_fwnode_device_properties props;
 	int ret = 0;
 
-	#define AR0144_NUM_CTRLS	7
+	#define AR0144_NUM_CTRLS	9
 	#define STEP_VALUE_1	1
 
 	// initialise the control handler for all controls
@@ -752,7 +917,24 @@ static int ar0144_init_controls(struct ar0144_state *state)
 		dev_err(&client->dev, "test_pattern v4l2_ctrl_new_std failed: %#010X\n", ctrl_handler->error);
 		goto ctrl_error;
 	}
-	
+
+	/* pixel rate */
+	s64 pixel_rate = pixel_rates[state->link_freq_idx];
+	ctrls->pixel_clock = v4l2_ctrl_new_std(ctrl_handler, ops, V4L2_CID_PIXEL_RATE,
+					pixel_rate, INT_MAX, pixel_rate, pixel_rate);
+	if (ctrl_handler->error) {
+		dev_err(&client->dev, "pixel_clock v4l2_ctrl_new_std failed: %#010X\n", ctrl_handler->error);
+		goto ctrl_error;
+	}
+
+	/* link frequency */
+	ctrls->link_freq = v4l2_ctrl_new_int_menu(ctrl_handler, ops, V4L2_CID_LINK_FREQ,
+				   ARRAY_SIZE(link_freq) - 1, state->link_freq_idx, link_freq);
+	if (ctrl_handler->error) {
+		dev_err(&client->dev, "link_freq v4l2_ctrl_new_std failed: %#010X\n", ctrl_handler->error);
+		goto ctrl_error;
+	}
+
 	// parse the device tree to fetch the sensor properties
 	ret = v4l2_fwnode_device_parse(&client->dev, &props);
 	if (ret)
@@ -768,6 +950,8 @@ static int ar0144_init_controls(struct ar0144_state *state)
 	ctrls->exposure->flags |= V4L2_CTRL_FLAG_VOLATILE;
 	ctrls->analog_gain->flags |= V4L2_CTRL_FLAG_READ_ONLY;
 	ctrls->orientation->flags |= V4L2_CTRL_FLAG_READ_ONLY;
+	ctrls->pixel_clock->flags |= V4L2_CTRL_FLAG_READ_ONLY;
+	ctrls->link_freq->flags |= V4L2_CTRL_FLAG_READ_ONLY;
 
 	state->sd.ctrl_handler = ctrl_handler;
 
