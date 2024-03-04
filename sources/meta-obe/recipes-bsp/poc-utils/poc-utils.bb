@@ -21,8 +21,8 @@ do_install() {
     install -m 0755 ${WORKDIR}/poc-scripts/power-isp.sh ${D}/home/root/poc-scripts/power-isp.sh
     install -m 0755 ${WORKDIR}/poc-scripts/reset.sh ${D}/home/root/poc-scripts/reset.sh
     install -m 0755 ${WORKDIR}/poc-scripts/capture.sh ${D}/home/root/poc-scripts/capture.sh
-    install -m 0755 ${WORKDIR}/poc-scripts/capture.sh ${D}/home/root/poc-scripts/cam.sh
-    install -m 0755 ${WORKDIR}/poc-scripts/capture.sh ${D}/home/root/poc-scripts/debug.sh
+    install -m 0755 ${WORKDIR}/poc-scripts/cam.sh ${D}/home/root/poc-scripts/cam.sh
+    install -m 0755 ${WORKDIR}/poc-scripts/debug.sh ${D}/home/root/poc-scripts/debug.sh
 }
 
 FILES:${PN}:append = " /home/root/poc-scripts/bypass-isp.sh"

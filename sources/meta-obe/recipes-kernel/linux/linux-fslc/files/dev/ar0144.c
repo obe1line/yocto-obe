@@ -102,6 +102,9 @@ static const char * const test_pattern_menu[] = {
 	"Fade-to-grey color bars",
 };
 
+// color bars as a default
+#define DEFAULT_TEST_PATTERN 2
+
 struct ar0144_reg_val_pair {
 	u16 reg;
 	u16 val;
@@ -838,7 +841,7 @@ static int ar0144_init_timings(struct ar0144_state *state)
 	state->timings.analog_gain = AR0144_1280_800_ANALOG_GAIN_VALUE;
 
 	state->link_freq_idx = AR0144_LINK_FREQ_240_MHZ;
-
+	
 	dev_info(&client->dev, "Initialised timings\n");
 	return 0;
 }
@@ -912,7 +915,7 @@ static int ar0144_init_controls(struct ar0144_state *state)
 
 	/* test pattern */
 	ctrls->test_pattern = v4l2_ctrl_new_std_menu_items(ctrl_handler, ops, V4L2_CID_TEST_PATTERN,
-					ARRAY_SIZE(test_pattern_menu) - 1, 0, 0, test_pattern_menu);
+					ARRAY_SIZE(test_pattern_menu) - 1, 0, DEFAULT_TEST_PATTERN, test_pattern_menu);
 	if (ctrl_handler->error) {
 		dev_err(&client->dev, "test_pattern v4l2_ctrl_new_std failed: %#010X\n", ctrl_handler->error);
 		goto ctrl_error;

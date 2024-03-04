@@ -2,6 +2,9 @@
 build/conf/conf-notes.txt
 build/conf/templateconf.cfg
 
+# virtual envs
+venv
+
 # build
 build/bitbake.lock
 build/cache/

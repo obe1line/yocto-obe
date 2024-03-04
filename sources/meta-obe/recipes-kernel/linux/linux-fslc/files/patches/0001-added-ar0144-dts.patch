@@ -115,7 +115,7 @@ index 000000000000..81b6e65a0e33
 +                /* powerdown-gpios = <&gpio1 7 GPIO_ACTIVE_HIGH>; */
 +                /* reset-gpios = <&gpio1 6 GPIO_ACTIVE_LOW>; */
 +                orientation = <2>;
-+                mclk = <24000000>;
++                mclk = <27000000>;
 +                mclk_source = <0>;
 +                mipi_csi;
 +                status = "okay";
