@@ -1,0 +1,60 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Copyright 2024
+ */
+
+/dts-v1/;
+
+#include "imx8mn-ddr4-evk-poc.dts"
+
+&i2c3 {
+        /delete-node/ ov5640_camera@3c;
+
+        imx708_camera@10 {
+                compatible = "sony,imx708";
+                reg = <0x10>;
+                pinctrl-names = "default";
+                pinctrl-0 = <&pinctrl_camera>;
+                clocks = <&clk IMX8MN_CLK_CLKO1>;
+                clock-names = "xclk";
+                assigned-clocks = <&clk IMX8MN_CLK_CLKO1>;
+                assigned-clock-parents = <&clk IMX8MN_CLK_24M>;
+                assigned-clock-rates = <24000000>;
+                csi_id = <0x00>;
+                powerdown-gpios = <&gpio1 7 GPIO_ACTIVE_HIGH>;
+                reset-gpios = <&gpio1 6 GPIO_ACTIVE_LOW>;
+                orientation = <2>;
+                rotation = <180>;
+                mclk = <24000000>;
+                mclk_source = <0>;
+                mipi_csi;
+                status = "okay";
+
+                port {
+                        imx708_to_mipi_csi2: endpoint {
+                                remote-endpoint = <&imx8mn_mipi_csi_in>;
+                                link-frequencies = /bits/ 64 <450000000>;
+                                clock-lanes = <0>;
+                                data-lanes = <1 2>;
+                        };
+                };
+        };
+};
+
+
+&isi {
+	status = "okay";
+};
+
+&mipi_csi {
+	status = "okay";
+
+	ports {
+		port@0 {
+			imx8mn_mipi_csi_in: endpoint {
+				remote-endpoint = <&imx708_to_mipi_csi2>;
+				data-lanes = <1 2>;
+			};
+		};
+	};
+};

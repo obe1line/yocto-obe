@@ -1,20 +1,33 @@
 From 2b57f91cbd203d8d9557513376b7848fb408385a Mon Sep 17 00:00:00 2001
 From: Chris Storah <chris.storah@gmail.com>
-Date: Thu, 22 Feb 2024 12:33:56 +1100
+Date: Fri, 8 Mar 2024 17:46:56 +1100
 Subject: [PATCH] abc
 
 ---
- drivers/media/i2c/Kconfig | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/media/i2c/Kconfig | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
 diff --git a/drivers/media/i2c/Kconfig b/drivers/media/i2c/Kconfig
-index 74ff833ff48c..f46824cac2ef 100644
+index 74ff833ff48c..d985fd20cde7 100644
 --- a/drivers/media/i2c/Kconfig
 +++ b/drivers/media/i2c/Kconfig
-@@ -200,6 +200,16 @@ config VIDEO_IMX415
- 	  To compile this driver as a module, choose M here: the
- 	  module will be called imx415.
+@@ -200,6 +200,29 @@ config VIDEO_IMX415
+          To compile this driver as a module, choose M here: the
+          module will be called imx415.
  
++config VIDEO_IMX708
++       tristate "Sony IMX708 sensor support"
++       depends on I2C && VIDEO_DEV
++       select MEDIA_CONTROLLER
++       select VIDEO_V4L2_SUBDEV_API
++       select V4L2_FWNODE
++       help
++         This is a Video4Linux2 sensor driver for the Sony
++         IMX708 camera.
++
++         To compile this driver as a module, choose M here: the
++         module will be called imx708.
++
 +config VIDEO_AR0144
 +       tristate "ON Semiconductor AR0144 sensor support"
 +       depends on I2C && VIDEO_DEV
@@ -26,7 +39,7 @@ index 74ff833ff48c..f46824cac2ef 100644
 +         CMOS image sensor.
 +
  config VIDEO_MAX9271_LIB
- 	tristate
+        tristate
  
 -- 
 2.39.2

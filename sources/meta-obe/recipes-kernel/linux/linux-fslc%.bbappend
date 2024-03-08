@@ -27,4 +27,6 @@ KERNEL_MODULE_AUTOLOAD:remove = "ar0144"
 do_patch:append() {
     bbwarn "Copy dev files over patched ones while developing (easier that updating patches)"
     cp ${DEVFOLDER}/ar0144.c ${S}/drivers/media/i2c/ar0144.c
+    cp ${DEVFOLDER}/imx708.c ${S}/drivers/media/i2c/imx708.c
+    cp ${DEVFOLDER}/imx8mn-ddr4-evk-poc-imx708.dts ${S}/arch/arm64/boot/dts/freescale/imx8mn-ddr4-evk-poc-imx708.dts
 }

@@ -35,6 +35,7 @@ fi
 
 if [ -n "$dev" ]; then
   cp $FILES_PATH/dev/ar0144.c $LINUX_SOURCE/drivers/media/i2c/
+  cp $FILES_PATH/dev/imx708.c $LINUX_SOURCE/drivers/media/i2c/
 fi
 
 if [ -n "$distclean" ]; then

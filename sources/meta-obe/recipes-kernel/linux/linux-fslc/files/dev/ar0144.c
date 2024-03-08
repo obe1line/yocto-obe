@@ -110,61 +110,6 @@ struct ar0144_reg_val_pair {
 	u16 val;
 };
 
-static const struct ar0144_reg_val_pair ar0144at_pll_27mhz[] = {
-	{0x302A, 0x0006},
-	{0x302C, 0x0001},
-	{0x302E, 0x0004},
-	{0x3030, 0x4a /*0x0042*/},
-	{0x3036, 0x000C},
-	{0x3038, 0x0001},
-	/* Addition settings from Oren */
-	{0x3080, 0x0000},
-	{0x3180, 0x0042},
-	{0x3182, 0x002E},
-	{0x3184, 0x1665},
-	{0x3186, 0x110E},
-	{0x3188, 0x2047},
-	{0x318a, 0x0105},
-	{0x318c, 0x0004},
-};
-
-static const struct ar0144_reg_val_pair ar0144at_mipi_2lane_12bit[] = {
-	{0x31AE, 0x0202},
-	{0x31AC, 0x0C0C},
-	{0x31B0, 0x0042},
-	{0x31B2, 0x002E},
-	{0x31B4, 0x1665},
-	{0x31B6, 0x110E},
-	{0x31B8, 0x2047},
-	{0x31BA, 0x0105},
-	{0x31BC, 0x0004},
-};
-
-static const struct ar0144_reg_val_pair ar0144at_1280x800_60fps[] = {
-	{0x3002, 0x0000},
-	{0x3004, 0x0004},
-	{0x3006, 0x031F},
-	{0x3008, 0x0503},
-	{0x300A, 0x0339},
-	{0x300C, 0x05D0},
-	{0x3012, 0x0064},
-	{0x30A2, 0x0001},
-	{0x30A6, 0x0001},
-	{0x3040, 0x0000},
-};
-
-static const struct ar0144_reg_val_pair ar0144at_context_b_2x2_binning[] = {
-	{0x3040, 0x1000},
-	{0x30A8, 0x0003},
-	{0x3040, 0x3000},
-	{0x30AE, 0x0003},
-};
-
-static const struct ar0144_reg_val_pair ar0144at_embedded_data_stats[] = {
-	{0x3064, 0x1982},
-};
-
-
 static const struct ar0144_reg_val_pair ar0144_stream_enable[] = {
 	{0x3028, 0x0010},	/* ??? */
 	{0x301A, 0x005C},	/* start stream */
@@ -192,32 +137,6 @@ struct ar0144_state {
 	.val_bits = 16,
 	.cache_type = REGCACHE_NONE,
 };
-
-/*
-libcamera support:
-Optional Requirements
----------------------
-.. _V4L2_CID_CAMERA_ORIENTATION: https://www.kernel.org/doc/html/latest/userspace-api/media/v4l/ext-ctrls-camera.html
-.. _V4L2_CID_CAMERA_SENSOR_ROTATION: https://www.kernel.org/doc/html/latest/userspace-api/media/v4l/ext-ctrls-camera.html
-.. _V4L2_CID_HFLIP: https://www.kernel.org/doc/html/latest/userspace-api/media/v4l/control.html
-.. _V4L2_CID_VFLIP: https://www.kernel.org/doc/html/latest/userspace-api/media/v4l/control.html
-
-The controls must be writable from userspace. In case of a RAW Bayer sensors,
-drivers should correctly report if vertical/horizontal flips modify the Bayer
-pattern ordering by reporting the `V4L2_CTRL_FLAG_MODIFY_LAYOUT` control flag.
-
-The sensor driver should implement support for the V4L2 Selection API,
-specifically it should implement support for the
-`VIDIOC_SUBDEV_G_SELECTION`_ ioctl with support for the following selection
-targets:
-
-.. _VIDIOC_SUBDEV_G_SELECTION: https://www.kernel.org/doc/html/latest/userspace-api/media/v4l/vidioc-subdev-g-selection.html#c.V4L.VIDIOC_SUBDEV_G_SELECTION
-
-.. _V4L2_SEL_TGT_CROP_BOUNDS: https://www.kernel.org/doc/html/latest/userspace-api/media/v4l/v4l2-selection-targets.html
-.. _V4L2_SEL_TGT_CROP_DEFAULT: https://www.kernel.org/doc/html/latest/userspace-api/media/v4l/v4l2-selection-targets.html
-.. _V4L2_SEL_TGT_CROP: https://www.kernel.org/doc/html/latest/userspace-api/media/v4l/v4l2-selection-targets.html
-
-*/
 
 // Convert a v4l2_subdev to the parent ar0144_state
 static inline struct ar0144_state *to_ar0144_state(struct v4l2_subdev *sd)
@@ -281,32 +200,6 @@ static int ar0144_ctrl_subdev_log_status(struct v4l2_subdev *sd)
 	dev_info(&client->dev, "  Test pattern: %d\n", state->ctrls.test_pattern->val);
 	return 0;
 };
-
-// static int ar0144_ctrl_subdev_subscribe_event(struct v4l2_subdev *sd, struct v4l2_fh *fh, struct v4l2_event_subscription *sub)
-// {
-// 	struct i2c_client *client = v4l2_get_subdevdata(sd);
-// 	dev_info(&client->dev, "Subdev subscribe event\n");
-
-// 	if (sub->type == V4L2_EVENT_CTRL) {
-// 		dev_info(&client->dev, "Subdev subscribe event: V4L2_EVENT_CTRL, id=%#010X\n");
-// 		switch(sub->id){
-// 			case V4L2_CID_EXPOSURE:
-// 				dev_info(&client->dev, "Subdev subscribe event: V4L2_CID_EXPOSURE\n");
-// 				break;
-// 		}
-// 	}
-// 	else {
-// 		dev_info(&client->dev, "Subdev subscribe event: unknown\n");
-// 	}
-// 	return 0;
-// };
-
-// static int ar0144_event_subdev_unsubscribe(struct v4l2_subdev *sd, struct v4l2_fh *fh, struct v4l2_event_subscription *sub)
-// {
-// 	struct i2c_client *client = v4l2_get_subdevdata(sd);
-// 	dev_info(&client->dev, "Subdev unsubscribe event\n");
-// 	return 0;
-// };
 
 static int ar0144_write_register_array(struct ar0144_state *state,
 				       const struct ar0144_reg_val_pair *regs,
@@ -426,35 +319,11 @@ static int ar0144_s_stream(struct v4l2_subdev *sd, int enable)
 	mutex_lock(&state->lock);
 
 	if (enable) {
-		ret = ar0144_write_register_array(state, ar0144at_pll_27mhz, ARRAY_SIZE(ar0144at_pll_27mhz));
+		// set the test pattern
+		val = DEFAULT_TEST_PATTERN;
+		ret = regmap_write(state->regs, AR0144_TEST_PATTERN_MODE, val);
 		if (ret < 0) {
-			dev_err(&client->dev, "Error writing stream enable registers\n");
-			goto stream_exit;
-		}
-		
-		msleep(100);
-
-		ret = ar0144_write_register_array(state, ar0144at_mipi_2lane_12bit, ARRAY_SIZE(ar0144at_mipi_2lane_12bit));
-		if (ret < 0) {
-			dev_err(&client->dev, "Error writing stream enable registers\n");
-			goto stream_exit;
-		}
-
-		ret = ar0144_write_register_array(state, ar0144at_1280x800_60fps, ARRAY_SIZE(ar0144at_1280x800_60fps));
-		if (ret < 0) {
-			dev_err(&client->dev, "Error writing stream enable registers\n");
-			goto stream_exit;
-		}
-
-		ret = ar0144_write_register_array(state, ar0144at_context_b_2x2_binning, ARRAY_SIZE(ar0144at_context_b_2x2_binning));
-		if (ret < 0) {
-			dev_err(&client->dev, "Error writing stream enable registers\n");
-			goto stream_exit;
-		}
-
-		ret = ar0144_write_register_array(state, ar0144at_embedded_data_stats, ARRAY_SIZE(ar0144at_embedded_data_stats));
-		if (ret < 0) {
-			dev_err(&client->dev, "Error writing stream enable registers\n");
+			dev_err(&client->dev, "Error setting test pattern register\n");
 			goto stream_exit;
 		}
 
@@ -522,10 +391,6 @@ int ar0144_set_fmt_to_defaults(struct ar0144_state *state)
 	fmt->code = MEDIA_BUS_FMT_SRGGB12_1X12;
 	fmt->field = V4L2_FIELD_NONE;
 	fmt->colorspace = V4L2_COLORSPACE_SRGB;
-	// fmt->colorspace = V4L2_COLORSPACE_SRGB;
-	// fmt->ycbcr_enc = V4L2_YCBCR_ENC_DEFAULT;
-	// fmt->quantization = V4L2_QUANTIZATION_FULL_RANGE;
-	// fmt->xfer_func = V4L2_XFER_FUNC_DEFAULT;
 	return 0;
 };
 
@@ -535,11 +400,7 @@ static void ar0144_adj_fmt(struct v4l2_mbus_framefmt *fmt)
 	fmt->height = clamp(ALIGN(fmt->height, 4), AR0144_HEIGHT_MIN, AR0144_HEIGHT_MAX);
 	fmt->code = MEDIA_BUS_FMT_SRGGB12_1X12;
 	fmt->field = V4L2_FIELD_NONE;
-	// fmt->colorspace = V4L2_COLORSPACE_RAW;
 	fmt->colorspace = V4L2_COLORSPACE_SRGB;
-	// fmt->ycbcr_enc = V4L2_YCBCR_ENC_DEFAULT;
-	// fmt->quantization = V4L2_QUANTIZATION_FULL_RANGE;
-	// fmt->xfer_func = V4L2_XFER_FUNC_DEFAULT;
 }
 
 static int ar0144_enum_mbus_code(struct v4l2_subdev *sd, struct v4l2_subdev_state *state, struct v4l2_subdev_mbus_code_enum *code)
@@ -673,7 +534,6 @@ static int ar0144_enum_frame_interval(struct v4l2_subdev *sd, struct v4l2_subdev
 static int ar0144_enable_subdev_streams(struct v4l2_subdev *sd, struct v4l2_subdev_state *state, u32 pad, u64 streams_mask)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
-	// struct ar0144_state *state = to_ar0144_state(sd);
 
 	dev_info(&client->dev, "Enable subdev streams for pad: %d, mask: %lld\n", pad, streams_mask);
 
@@ -685,7 +545,6 @@ static int ar0144_enable_subdev_streams(struct v4l2_subdev *sd, struct v4l2_subd
 static int ar0144_disable_subdev_streams(struct v4l2_subdev *sd, struct v4l2_subdev_state *state, u32 pad, u64 streams_mask)
 {
 	struct i2c_client *client = v4l2_get_subdevdata(sd);
-	// struct ar0144_state *state = to_ar0144_state(sd);
 
 	dev_info(&client->dev, "Disable subdev streams for pad: %d, mask: %lld\n", pad, streams_mask);
 
@@ -815,7 +674,6 @@ static int ar0144_s_ctrl(struct v4l2_ctrl *ctrl)
 			break;
 		case V4L2_CID_TEST_PATTERN:
 			dev_info(&client->dev, "V4L2_CID_TEST_PATTERN\n");
-			ret = regmap_write(state->regs, AR0144_TEST_PATTERN_MODE, ctrl->val);
 			break;
 		default:
 			dev_err(&client->dev, "Unsupported control %#010X\n", ctrl->id);
