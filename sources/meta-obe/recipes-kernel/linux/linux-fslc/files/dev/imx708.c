@@ -6,6 +6,9 @@
  * Based on Sony imx477 camera driver
  * Copyright (C) 2020 Raspberry Pi Ltd
  */
+
+#define DEBUG 1
+
 #include <asm/unaligned.h>
 #include <linux/clk.h>
 #include <linux/delay.h>
@@ -13,7 +16,7 @@
 #include <linux/i2c.h>
 #include <linux/module.h>
 #include <linux/pm_runtime.h>
-#include <linux/regulator/consumer.h>
+// #include <linux/regulator/consumer.h>
 #include <media/v4l2-ctrls.h>
 #include <media/v4l2-device.h>
 #include <media/v4l2-event.h>
@@ -806,13 +809,13 @@ static const int imx708_test_pattern_val[] = {
 };
 
 /* regulator supplies */
-static const char * const imx708_supply_name[] = {
-	/* Supplies can be enabled in any order */
-	"vana1",  /* Analog1 (2.8V) supply */
-	"vana2",  /* Analog2 (1.8V) supply */
-	"vdig",  /* Digital Core (1.1V) supply */
-	"vddl",  /* IF (1.8V) supply */
-};
+// static const char * const imx708_supply_name[] = {
+// 	/* Supplies can be enabled in any order */
+// 	"vana1",  /* Analog1 (2.8V) supply */
+// 	"vana2",  /* Analog2 (1.8V) supply */
+// 	"vdig",  /* Digital Core (1.1V) supply */
+// 	"vddl",  /* IF (1.8V) supply */
+// };
 
 /*
  * Initialisation delay between XCLR low->high and the moment when the sensor
@@ -835,7 +838,7 @@ struct imx708 {
 	u32 inclk_freq;
 
 	struct gpio_desc *reset_gpio;
-	struct regulator_bulk_data supplies[ARRAY_SIZE(imx708_supply_name)];
+	// struct regulator_bulk_data supplies[ARRAY_SIZE(imx708_supply_name)];
 
 	struct v4l2_ctrl_handler ctrl_handler;
 	/* V4L2 Controls */
@@ -1633,13 +1636,13 @@ static int imx708_power_on(struct device *dev)
 	struct imx708 *imx708 = to_imx708(sd);
 	int ret;
 
-	ret = regulator_bulk_enable(ARRAY_SIZE(imx708_supply_name),
-				    imx708->supplies);
-	if (ret) {
-		dev_err(&client->dev, "%s: failed to enable regulators\n",
-			__func__);
-		return ret;
-	}
+	// ret = regulator_bulk_enable(ARRAY_SIZE(imx708_supply_name),
+	// 			    imx708->supplies);
+	// if (ret) {
+	// 	dev_err(&client->dev, "%s: failed to enable regulators\n",
+	// 		__func__);
+	// 	return ret;
+	// }
 
 	ret = clk_prepare_enable(imx708->inclk);
 	if (ret) {
@@ -1655,8 +1658,8 @@ static int imx708_power_on(struct device *dev)
 	return 0;
 
 reg_off:
-	regulator_bulk_disable(ARRAY_SIZE(imx708_supply_name),
-			       imx708->supplies);
+	// regulator_bulk_disable(ARRAY_SIZE(imx708_supply_name),
+	// 		       imx708->supplies);
 	return ret;
 }
 
@@ -1667,8 +1670,8 @@ static int imx708_power_off(struct device *dev)
 	struct imx708 *imx708 = to_imx708(sd);
 
 	gpiod_set_value_cansleep(imx708->reset_gpio, 0);
-	regulator_bulk_disable(ARRAY_SIZE(imx708_supply_name),
-			       imx708->supplies);
+	// regulator_bulk_disable(ARRAY_SIZE(imx708_supply_name),
+	// 		       imx708->supplies);
 	clk_disable_unprepare(imx708->inclk);
 
 	/* Force reprogramming of the common registers when powered up again. */
@@ -1710,18 +1713,18 @@ error:
 	return ret;
 }
 
-static int imx708_get_regulators(struct imx708 *imx708)
-{
-	struct i2c_client *client = v4l2_get_subdevdata(&imx708->sd);
-	unsigned int i;
+// static int imx708_get_regulators(struct imx708 *imx708)
+// {
+// 	struct i2c_client *client = v4l2_get_subdevdata(&imx708->sd);
+// 	unsigned int i;
 
-	for (i = 0; i < ARRAY_SIZE(imx708_supply_name); i++)
-		imx708->supplies[i].supply = imx708_supply_name[i];
+// 	for (i = 0; i < ARRAY_SIZE(imx708_supply_name); i++)
+// 		imx708->supplies[i].supply = imx708_supply_name[i];
 
-	return devm_regulator_bulk_get(&client->dev,
-				       ARRAY_SIZE(imx708_supply_name),
-				       imx708->supplies);
-}
+// 	return devm_regulator_bulk_get(&client->dev,
+// 				       ARRAY_SIZE(imx708_supply_name),
+// 				       imx708->supplies);
+// }
 
 /* Verify chip ID */
 static int imx708_identify_module(struct imx708 *imx708)
@@ -1996,16 +1999,18 @@ static int imx708_probe(struct i2c_client *client)
 	if (IS_ERR(imx708->inclk))
 		return dev_err_probe(dev, PTR_ERR(imx708->inclk),
 				     "failed to get inclk\n");
+	dev_dbg(dev, "inclk rate: %lu Hz\n", clk_get_rate(imx708->inclk));
 
 	imx708->inclk_freq = clk_get_rate(imx708->inclk);
 	if (imx708->inclk_freq != IMX708_INCLK_FREQ)
 		return dev_err_probe(dev, -EINVAL,
 				     "inclk frequency not supported: %d Hz\n",
 				     imx708->inclk_freq);
+	dev_dbg(dev, "inclk frequency: %u Hz\n", imx708->inclk_freq);
 
-	ret = imx708_get_regulators(imx708);
-	if (ret)
-		return dev_err_probe(dev, ret, "failed to get regulators\n");
+	// ret = imx708_get_regulators(imx708);
+	// if (ret)
+	// 	return dev_err_probe(dev, ret, "failed to get regulators\n");
 
 	/* Request optional enable pin */
 	imx708->reset_gpio = devm_gpiod_get_optional(dev, "reset",
@@ -2015,28 +2020,34 @@ static int imx708_probe(struct i2c_client *client)
 	 * The sensor must be powered for imx708_identify_module()
 	 * to be able to read the CHIP_ID register
 	 */
+	dev_dbg(dev, "powering up sensor\n");
 	ret = imx708_power_on(dev);
 	if (ret)
 		return ret;
 
+	dev_dbg(dev, "identifying sensor\n");
 	ret = imx708_identify_module(imx708);
 	if (ret)
 		goto error_power_off;
 
 	/* Initialize default format */
+	dev_dbg(dev, "initializing default format\n");
 	imx708_set_default_format(imx708);
 
 	/* Enable runtime PM and turn off the device */
+	dev_dbg(dev, "enabling runtime PM\n");
 	pm_runtime_set_active(dev);
 	pm_runtime_enable(dev);
 	pm_runtime_idle(dev);
 
 	/* This needs the pm runtime to be registered. */
+	dev_dbg(dev, "initializing controls\n");
 	ret = imx708_init_controls(imx708);
 	if (ret)
 		goto error_pm_runtime;
 
 	/* Initialize subdev */
+	dev_dbg(dev, "initializing subdev\n");
 	imx708->sd.internal_ops = &imx708_internal_ops;
 	imx708->sd.flags |= V4L2_SUBDEV_FL_HAS_DEVNODE |
 			    V4L2_SUBDEV_FL_HAS_EVENTS;
@@ -2046,12 +2057,14 @@ static int imx708_probe(struct i2c_client *client)
 	imx708->pad[IMAGE_PAD].flags = MEDIA_PAD_FL_SOURCE;
 	imx708->pad[METADATA_PAD].flags = MEDIA_PAD_FL_SOURCE;
 
+	dev_dbg(dev, "initializing media entity\n");
 	ret = media_entity_pads_init(&imx708->sd.entity, NUM_PADS, imx708->pad);
 	if (ret) {
 		dev_err(dev, "failed to init entity pads: %d\n", ret);
 		goto error_handler_free;
 	}
 
+	dev_dbg(dev, "registering subdev\n");
 	ret = v4l2_async_register_subdev_sensor(&imx708->sd);
 	if (ret < 0) {
 		dev_err(dev, "failed to register sensor sub-device: %d\n", ret);
